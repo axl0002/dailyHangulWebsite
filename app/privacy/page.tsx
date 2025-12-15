@@ -59,7 +59,7 @@ export default function PrivacyPolicy() {
                     <p>
                         To ask questions or comment about this privacy policy and our privacy practices, contact us at:{" "}
                         <a href="mailto:support@relationshipai.app" className="text-violet-400 hover:text-violet-300 transition-colors">
-                            support@relationshipai.com
+                            support@relationship-ai.com
                         </a>
                     </p>
                 </section>

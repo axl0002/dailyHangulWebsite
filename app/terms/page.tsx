@@ -60,7 +60,7 @@ export default function TermsOfService() {
                     <p>
                         If you have any questions about these Terms, please contact us at:{" "}
                         <a href="mailto:support@relationshipai.app" className="text-violet-400 hover:text-violet-300 transition-colors">
-                            support@relationshipai.com
+                            support@relationship-ai.com
                         </a>
                     </p>
                 </section>

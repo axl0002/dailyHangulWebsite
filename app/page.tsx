@@ -64,7 +64,7 @@ export default function Home() {
           </div>
         </div>
       </main>
-
+      </main>
 
       <footer className="w-full max-w-4xl mx-auto pt-16 pb-8 text-center sm:text-left z-10">
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-slate-500 gap-4">
