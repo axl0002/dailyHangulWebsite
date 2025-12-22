@@ -8,8 +8,19 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Daily Hanzi - Learn Chinese on Lock Screen",
-  description: "Master Chinese characters gradually. Your daily dose of Hanzi, right on your lock screen.",
+  title: "Daily Hanzi - Learn Chinese Characters (Hanzi) on Lock Screen",
+  description: "The best app to learn Chinese characters (Hanzi) effortlessly. Master vocabulary with daily spaced repetition right on your phone's lock screen.",
+  keywords: ["Learn Chinese", "Chinese Characters", "Hanzi", "Lock Screen Learning", "Language App", "Spaced Repetition", "Daily Chinese"],
+  openGraph: {
+    title: "Daily Hanzi - Learn Chinese on Lock Screen",
+    description: "Master Learning Chinese characters effortlessly with every unlock.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Daily Hanzi",
+    description: "Learn Chinese characters on your lock screen.",
+  }
 };
 
 export default function RootLayout({

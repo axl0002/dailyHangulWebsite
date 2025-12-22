@@ -10,6 +10,25 @@ export default function Home() {
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-primary/20 rounded-full blur-3xl opacity-30" />
       </div>
 
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MobileApplication",
+            "name": "Daily Hanzi",
+            "operatingSystem": "iOS, Android",
+            "applicationCategory": "EducationalApplication",
+            "description": "Learn Chinese characters (Hanzi) effortlessly on your lock screen.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })
+        }}
+      />
+
       <main className="max-w-4xl w-full flex flex-col items-center text-center space-y-10 z-10">
         {/* Pill Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-primary/20 backdrop-blur-md shadow-lg">
@@ -25,14 +44,14 @@ export default function Home() {
         {/* Headlines */}
         <div className="space-y-6">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-primary drop-shadow-sm">
-            Master Chinese <br className="hidden sm:block" />
+            Master Learning Chinese <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-secondary">
-              One Unlock
+              Characters
             </span>{" "}
-            at a Time
+            (Hanzi)
           </h1>
           <p className="max-w-2xl mx-auto text-lg sm:text-xl text-foreground/80 leading-relaxed">
-            Learn Chinese characters effortlessly. The app that teaches you Hanzi every time you wake up your phone.
+            The effortless way to learn Hanzi. Your daily Chinese character learning app, integrated right into your lock screen.
           </p>
         </div>
 
@@ -48,19 +67,19 @@ export default function Home() {
             <div className="p-3 rounded-full bg-accent border border-primary/10 text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
             </div>
-            <span>Lock Screen Learning</span>
+            <span>Lock Screen Hanzi</span>
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="p-3 rounded-full bg-accent border border-primary/10 text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20" /></svg>
             </div>
-            <span>Spaced Repetition</span>
+            <span>Smart Review System</span>
           </div>
           <div className="flex flex-col items-center gap-2">
             <div className="p-3 rounded-full bg-accent border border-primary/10 text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
             </div>
-            <span>Daily Progress</span>
+            <span>Track Your Fluency</span>
           </div>
         </div>
       </main>
