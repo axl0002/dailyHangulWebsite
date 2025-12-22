@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Slate 950 background */
-  --background: #020617; 
-  /* Slate 50 foreground */
-  --foreground: #f8fafc;
+  /* Cream Light background */
+  --background: #F9F5E7; 
+  /* Dark Mauve foreground for contrast */
+  --foreground: #5D3A3F;
   
-  /* Violet 500 */
-  --primary: #8b5cf6;
-  /* Pink 500 */
-  --secondary: #ec4899;
+  /* Mauve - Primary */
+  --primary: #A7727D;
+  /* Beige - Secondary */
+  --secondary: #EDDBC7;
+  /* Cream Med - Accent/Surface */
+  --accent: #F8EAD8;
 }
 
 @theme inline {
@@ -17,6 +19,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
   --font-sans: var(--font-outfit);
 }
 

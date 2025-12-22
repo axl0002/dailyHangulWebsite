@@ -4,7 +4,7 @@ export const AppleStoreButton = () => {
     return (
         <a
             href="#"
-            className="flex items-center gap-3 bg-white text-black px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity active:scale-95 duration-200"
+            className="flex items-center gap-3 bg-primary text-white border border-transparent px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all active:scale-95 duration-200 hover:-translate-y-1"
         >
             <svg
                 viewBox="0 0 384 512"
@@ -25,7 +25,7 @@ export const GooglePlayButton = () => {
     return (
         <a
             href="#"
-            className="flex items-center gap-3 border border-white/20 bg-transparent text-white duration-200 hover:bg-white/10 px-5 py-2.5 rounded-xl active:scale-95 backdrop-blur-sm"
+            className="flex items-center gap-3 bg-primary text-white border border-transparent px-6 py-3.5 rounded-2xl shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all active:scale-95 duration-200 hover:-translate-y-1"
         >
             <svg
                 viewBox="0 0 512 512"

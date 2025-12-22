@@ -8,8 +8,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Relationship AI - Elevate Your Connections",
-  description: "Your personal relationship coach, powered by AI.",
+  title: "Daily Hanzi - Learn Chinese on Lock Screen",
+  description: "Master Chinese characters gradually. Your daily dose of Hanzi, right on your lock screen.",
 };
 
 export default function RootLayout({
