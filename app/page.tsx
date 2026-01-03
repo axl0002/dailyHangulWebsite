@@ -37,7 +37,7 @@ export default function Home() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
           <span className="text-sm font-medium text-foreground tracking-wide">
-            The #1 Lock Screen Learning App
+            The #1 Chinese Lock Screen Learning App
           </span>
         </div>
 
