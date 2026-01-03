@@ -91,6 +91,7 @@ export default function Home() {
           <div className="flex gap-6">
             <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
             <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
+            <a href="/support" className="hover:text-primary transition-colors">Support</a>
           </div>
         </div>
       </footer>
