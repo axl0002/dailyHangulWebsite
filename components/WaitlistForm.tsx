@@ -13,6 +13,13 @@ export function WaitlistForm() {
         e.preventDefault();
         if (!email) return;
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setStatus('error');
+            setMessage('Please enter a valid email address.');
+            return;
+        }
+
         setLoading(true);
         setStatus('idle');
         setMessage('');
