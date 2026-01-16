@@ -1,5 +1,5 @@
-import { WaitlistForm } from "@/components/WaitlistForm";
 import Image from "next/image";
+import Script from "next/script";
 
 export default function Home() {
   return (
@@ -78,8 +78,30 @@ export default function Home() {
             </div>
 
             {/* Waitlist Form */}
-            <div className="w-full pt-2">
-              <WaitlistForm />
+            <div className="w-full pt-2 flex flex-col items-center">
+              <iframe
+                src="https://subscribe-forms.beehiiv.com/78bf7849-7b4e-47cc-9148-e8893c4185bb"
+                className="beehiiv-embed"
+                data-test-id="beehiiv-embed"
+                frameBorder="0"
+                scrolling="no"
+                style={{
+                  margin: 0,
+                  borderRadius: "0px",
+                  backgroundColor: "transparent",
+                  width: "400px",
+                  maxWidth: "100%",
+                  height: "47px",
+                  boxShadow: "0 0 #0000",
+                }}
+              />
+              <Script
+                src="https://subscribe-forms.beehiiv.com/embed.js"
+                strategy="lazyOnload"
+              />
+              <p className="text-xs text-foreground/50 mt-1 text-center max-w-[560px]">
+                By joining, you agree to receive updates from us.
+              </p>
             </div>
 
             {/* Feature Badges */}
