@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CharacterEditModal, { Character } from "../components/CharacterEditModal";
 
@@ -42,7 +42,7 @@ export default function SentenceReportsPage() {
     const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
     const [showModal, setShowModal] = useState(false);
 
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         setLoading(true);
         try {
             let query = supabase
@@ -60,16 +60,17 @@ export default function SentenceReportsPage() {
             if (error) throw error;
 
             setReports(data || []);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            setError(message);
         } finally {
             setLoading(false);
         }
-    };
+    }, [sortField, sortOrder]);
 
     useEffect(() => {
         fetchReports();
-    }, [sortField, sortOrder]);
+    }, [fetchReports]);
 
     const handleSort = (field: SortField) => {
         if (sortField === field) {
@@ -102,8 +103,9 @@ export default function SentenceReportsPage() {
                 setEditingCharacter(safeChar);
                 setShowModal(true);
             }
-        } catch (err: any) {
-            alert("Error fetching character details: " + err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            alert("Error fetching character details: " + message);
         }
     };
 

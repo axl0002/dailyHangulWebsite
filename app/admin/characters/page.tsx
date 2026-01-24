@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import CharacterEditModal, { Character, ExampleSentence } from "../components/CharacterEditModal";
+import CharacterEditModal, { Character } from "../components/CharacterEditModal";
 
 type SortField = keyof Character | null;
 type SortOrder = 'asc' | 'desc';
@@ -40,7 +40,7 @@ export default function CharactersPage() {
     const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
     const [showModal, setShowModal] = useState(false);
 
-    const fetchCharacters = async () => {
+    const fetchCharacters = useCallback(async () => {
         setLoading(true);
         try {
             let query = supabase
@@ -64,16 +64,19 @@ export default function CharactersPage() {
             if (error) throw error;
             setCharacters(data || []);
             setTotalCount(count || 0);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            setError(message);
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchTerm, sortField, sortOrder, currentPage, itemsPerPage]);
 
     useEffect(() => {
         fetchCharacters();
-    }, [currentPage, sortField, sortOrder]);
+    }, [fetchCharacters]);
+
+    // ... (rest of the file)
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,26 +125,12 @@ export default function CharactersPage() {
         }
 
         try {
-            // First delete related reports to avoid foreign key constraints (if not cascaded)
-            console.log("Deleting associated sentence reports...");
-            const { error: reportsError, count: reportsCount } = await supabase
-                .from("sentence_reports")
-                .delete()
-                .eq("character_id", char.id);
-
-            if (reportsError) {
-                console.error("Error deleting reports:", reportsError);
-            } else {
-                console.log(`Deleted ${reportsCount} associated reports.`);
-            }
-
-            // Even if reports delete fails (maybe none exist?), try deleting character
             console.log("Deleting character from database...");
             const { error, data } = await supabase
                 .from("characters")
                 .delete()
                 .eq("id", char.id)
-                .select(); // Request return data to verify deletion
+                .select();
 
             if (error) {
                 console.error("Error deleting character:", error);
@@ -160,9 +149,10 @@ export default function CharactersPage() {
             setCharacters(prev => prev.filter(c => c.id !== char.id));
             setTotalCount(prev => prev - 1);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
             console.error("Delete operation failed:", err);
-            alert("Error deleting character: " + err.message);
+            alert("Error deleting character: " + message);
         }
     };
 
@@ -171,6 +161,13 @@ export default function CharactersPage() {
     return (
         <div>
             <h1 className="text-2xl font-bold mb-6">Characters Management</h1>
+
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 {/* Search Bar */}

@@ -29,8 +29,9 @@ export default function AdminLogin() {
             // Force a router refresh to update server components/middleware state
             router.refresh();
             router.push("/admin/dashboard");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            setError(message);
         } finally {
             setLoading(false);
         }

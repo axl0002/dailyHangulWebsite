@@ -92,8 +92,9 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
             if (error) throw error;
             onSave();
-        } catch (err: any) {
-            alert("Error updating character: " + err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Unknown error";
+            alert("Error updating character: " + message);
         } finally {
             setLoading(false);
         }
@@ -210,7 +211,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                             {editingCharacter.example_sentences.length === 0 ? (
                                 <div className="text-center text-gray-400 py-10">
-                                    No example sentences yet. Click "Add Sentence" to create one.
+                                    No example sentences yet. Click &quot;Add Sentence&quot; to create one.
                                 </div>
                             ) : (
                                 editingCharacter.example_sentences.map((sentence, index) => (
