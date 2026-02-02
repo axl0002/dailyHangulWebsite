@@ -96,7 +96,7 @@ export default function Home() {
             </div>
 
             {/* Waitlist Form */}
-            <div className="w-full pt-2 flex flex-col items-center">
+            {/* <div className="w-full pt-2 flex flex-col items-center">
               <iframe
                 src="https://subscribe-forms.beehiiv.com/78bf7849-7b4e-47cc-9148-e8893c4185bb"
                 className="beehiiv-embed"
@@ -120,7 +120,7 @@ export default function Home() {
               <p className="text-xs text-foreground/50 mt-1 text-center max-w-[560px]">
                 By joining, you agree to receive updates from us.
               </p>
-            </div>
+            </div> */}
 
             {/* Feature Badges */}
             <div className="flex gap-6 pt-4 grayscale opacity-60">
