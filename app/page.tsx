@@ -77,6 +77,24 @@ export default function Home() {
               </p>
             </div>
 
+            {/* App Store Button */}
+            <div className="w-full pt-2 flex justify-center">
+              <a
+                href="https://apps.apple.com/us/app/daily-hanzi/id6756919959"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <svg viewBox="0 0 384 512" fill="currentColor" className="w-8 h-8">
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 46.9 126.7 98 123.2 25.3-1.8 44.7-16 83.2-15.6 38.6 .4 52.3 15.2 89.8 13.8 44.5-1.2 75.9-67.4 85-88.1-37.6-11.2-61.9-53-61.5-98.7H318.7zm-40.1-209.7c7.8-12.1 27.2-39.2 26-80.1-34.5 3.8-67.6 34.4-85 58-7.5 10.1-17.8 28-15.3 58.6 39.4 1.4 69.4-19.1 74.3-36.5z" />
+                </svg>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-xs font-medium opacity-80 mb-0.5">Download on the</span>
+                  <span className="text-xl font-bold tracking-wide">App Store</span>
+                </div>
+              </a>
+            </div>
+
             {/* Waitlist Form */}
             <div className="w-full pt-2 flex flex-col items-center">
               <iframe
