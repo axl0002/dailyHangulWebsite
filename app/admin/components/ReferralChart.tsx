@@ -19,7 +19,8 @@ export default function ReferralChart({ filter }: { filter?: 'all' | 'true' | 'f
             // Fetch profiles with survey_responses
             let query = supabase
                 .from('profiles')
-                .select('survey_responses');
+                .select('survey_responses')
+                .eq('is_beta', false);
 
             if (filter === 'true') {
                 query = query.eq('is_pro', true);

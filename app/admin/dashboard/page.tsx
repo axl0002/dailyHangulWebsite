@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 import ReferralChart from "../components/ReferralChart";
 import HSKLevelChart from "../components/HSKLevelChart";
@@ -10,6 +11,30 @@ import CategoryChart from "../components/CategoryChart";
 
 export default function AdminDashboard() {
     const [filter, setFilter] = useState<'all' | 'true' | 'false'>('all');
+    const [userCount, setUserCount] = useState<number | null>(null);
+
+    useEffect(() => {
+        const fetchUserCount = async () => {
+            let query = supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_beta', false);
+
+            if (filter === 'true') {
+                query = query.eq('is_pro', true);
+            } else if (filter === 'false') {
+                query = query.eq('is_pro', false);
+            }
+
+            const { count, error } = await query;
+
+            if (!error && count !== null) {
+                setUserCount(count);
+            }
+        };
+
+        fetchUserCount();
+    }, [filter]);
 
     return (
         <div className="p-6">
@@ -17,6 +42,13 @@ export default function AdminDashboard() {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                     <p className="text-gray-600 mt-1">Overview of Daily Hanzi performance and user metrics.</p>
+                    {userCount !== null && (
+                        <div className="mt-4 flex items-center">
+                            <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full border border-indigo-200">
+                                {userCount} Users Found
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col items-end">

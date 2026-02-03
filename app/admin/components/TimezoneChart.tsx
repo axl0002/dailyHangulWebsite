@@ -19,7 +19,8 @@ export default function TimezoneChart({ filter }: { filter?: 'all' | 'true' | 'f
             // Fetch profiles with timezone
             let query = supabase
                 .from('profiles')
-                .select('timezone');
+                .select('timezone')
+                .eq('is_beta', false);
 
             if (filter === 'true') {
                 query = query.eq('is_pro', true);

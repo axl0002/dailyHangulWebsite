@@ -19,7 +19,8 @@ export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'f
             // Fetch profiles with selected_categories
             let query = supabase
                 .from('profiles')
-                .select('selected_categories');
+                .select('selected_categories')
+                .eq('is_beta', false);
 
             if (filter === 'true') {
                 query = query.eq('is_pro', true);

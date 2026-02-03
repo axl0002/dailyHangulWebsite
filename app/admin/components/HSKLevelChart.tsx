@@ -19,7 +19,8 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
             // Fetch profiles with hsk_level
             let query = supabase
                 .from('profiles')
-                .select('hsk_level');
+                .select('hsk_level')
+                .eq('is_beta', false);
 
             if (filter === 'true') {
                 query = query.eq('is_pro', true);

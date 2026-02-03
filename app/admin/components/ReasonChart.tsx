@@ -19,7 +19,8 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
             // Fetch profiles with survey_responses
             let query = supabase
                 .from('profiles')
-                .select('survey_responses');
+                .select('survey_responses')
+                .eq('is_beta', false);
 
             if (filter === 'true') {
                 query = query.eq('is_pro', true);
