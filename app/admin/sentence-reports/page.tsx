@@ -14,6 +14,11 @@ type SentenceReport = {
     sentence_pinyin: string;
     sentence_english: string;
     issue_type: string;
+    characters: {
+        pinyin: string;
+        meaning: string;
+        category: string;
+    } | null;
 };
 
 type SortField = keyof SentenceReport;
@@ -32,6 +37,7 @@ export default function SentenceReportsPage() {
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
         user_id: false,
         character: true,
+        category: true,
         sentence: true,
         issue_type: true,
         created_at: false,
@@ -47,7 +53,7 @@ export default function SentenceReportsPage() {
         try {
             let query = supabase
                 .from("sentence_reports")
-                .select("*");
+                .select("*, characters(pinyin, meaning, category)");
 
             if (sortField) {
                 query = query.order(sortField, { ascending: sortOrder === 'asc' });
@@ -210,6 +216,11 @@ export default function SentenceReportsPage() {
                                     Character {sortField === 'character_content' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
+                            {visibleColumns.category && (
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Category
+                                </th>
+                            )}
                             {visibleColumns.sentence && (
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Reported Sentence
@@ -244,8 +255,25 @@ export default function SentenceReportsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                             <span className="text-lg font-bold text-gray-900">{report.character_content}</span>
-                                            <span className="text-xs text-gray-400 font-mono">ID: {report.character_id}</span>
+                                            {report.characters && (
+                                                <>
+                                                    <span className="text-sm text-gray-600">{report.characters.pinyin}</span>
+                                                    <span className="text-xs text-gray-500 max-w-[150px] truncate" title={report.characters.meaning}>
+                                                        {report.characters.meaning}
+                                                    </span>
+                                                </>
+                                            )}
+                                            <span className="text-xs text-gray-400 font-mono mt-1">ID: {report.character_id}</span>
                                         </div>
+                                    </td>
+                                )}
+                                {visibleColumns.category && (
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {report.characters?.category && (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {report.characters.category}
+                                            </span>
+                                        )}
                                     </td>
                                 )}
                                 {visibleColumns.sentence && (
