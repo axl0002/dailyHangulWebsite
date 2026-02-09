@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 import ReferralChart from "../components/ReferralChart";
+import UserGrowthChart from "../components/UserGrowthChart";
 import HSKLevelChart from "../components/HSKLevelChart";
 import ReasonChart from "../components/ReasonChart";
 import TimezoneChart from "../components/TimezoneChart";
@@ -81,6 +82,9 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Analytics Section */}
+                <div className="col-span-1 md:col-span-2">
+                    <UserGrowthChart filter={filter} />
+                </div>
                 <ReferralChart filter={filter} />
                 <HSKLevelChart filter={filter} />
                 <ReasonChart filter={filter} />
