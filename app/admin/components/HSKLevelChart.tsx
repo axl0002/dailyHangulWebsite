@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
 type ChartData = {
     name: string;
-    value: number;
+    pro: number;
+    free: number;
+    total: number;
 };
 
 export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
@@ -16,40 +18,82 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            // Fetch profiles with hsk_level
-            let query = supabase
-                .from('profiles')
-                .select('hsk_level')
-                .eq('is_beta', false);
+            // Fetch ALL profiles with pagination
+            let allProfiles: { hsk_level: number | string | null; is_pro: boolean | null }[] = [];
+            let page = 0;
+            const pageSize = 1000;
+            let hasMore = true;
 
-            if (filter === 'true') {
-                query = query.eq('is_pro', true);
-            } else if (filter === 'false') {
-                query = query.eq('is_pro', false);
+            while (hasMore) {
+                const from = page * pageSize;
+                const to = from + pageSize - 1;
+
+                let query = supabase
+                    .from('profiles')
+                    .select('hsk_level, is_pro')
+                    .eq('is_beta', false)
+                    .range(from, to);
+
+                if (filter === 'true') {
+                    query = query.eq('is_pro', true);
+                } else if (filter === 'false') {
+                    query = query.eq('is_pro', false);
+                }
+
+                const { data: batch, error } = await query;
+
+                if (error) {
+                    console.error('Error fetching profiles:', error);
+                    setLoading(false);
+                    return;
+                }
+
+                if (batch && batch.length > 0) {
+                    allProfiles = [...allProfiles, ...batch];
+                    if (batch.length < pageSize) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                }
+
+                page++;
+
+                // Safety break
+                if (allProfiles.length > 50000) {
+                    hasMore = false;
+                }
             }
 
-            const { data: profiles, error } = await query;
-
-            if (error) {
-                console.error('Error fetching profiles:', error);
-                setLoading(false);
-                return;
-            }
+            const profiles = allProfiles;
 
             // Process data
-            const levelCounts: Record<string, number> = {};
+            const levelCounts: Record<string, { pro: number; free: number }> = {};
 
-            profiles?.forEach((profile: { hsk_level: number | string | null }) => {
+            profiles?.forEach((profile: { hsk_level: number | string | null; is_pro: boolean | null }) => {
                 const level = profile.hsk_level;
                 if (level !== null && level !== undefined) {
                     const key = `HSK ${level}`;
-                    levelCounts[key] = (levelCounts[key] || 0) + 1;
+                    if (!levelCounts[key]) {
+                        levelCounts[key] = { pro: 0, free: 0 };
+                    }
+
+                    if (profile.is_pro) {
+                        levelCounts[key].pro++;
+                    } else {
+                        levelCounts[key].free++;
+                    }
                 }
             });
 
             // Convert to array and sort by name (HSK 1, HSK 2, etc.)
             const chartData = Object.entries(levelCounts)
-                .map(([name, value]) => ({ name, value }))
+                .map(([name, counts]) => ({
+                    name,
+                    pro: counts.pro,
+                    free: counts.free,
+                    total: counts.pro + counts.free
+                }))
                 .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
             setData(chartData);
@@ -97,13 +141,44 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
                         />
                         <Tooltip
                             cursor={{ fill: '#F9FAFB' }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                            content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    return (
+                                        <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
+                                            <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                                            {payload.map((entry: { name: string; value: number; color: string; payload: { total: number } }, index: number) => {
+                                                const isPro = entry.name === 'Pro Users';
+                                                const colorClass = isPro ? 'text-indigo-600' : 'text-gray-700';
+                                                const value = entry.value;
+                                                const total = entry.payload.total;
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2 h-2 rounded-full"
+                                                                style={{ backgroundColor: entry.color }}
+                                                            />
+                                                            <span className={`text-sm font-medium ${colorClass}`}>
+                                                                {entry.name}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${colorClass}`}>
+                                                            {value} ({percentage}%)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
-                        <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={['#10B981', '#34D399', '#6EE7B7', '#A7F3D0'][index % 4] || '#10B981'} />
-                            ))}
-                        </Bar>
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        <Bar dataKey="pro" name="Pro Users" stackId="hsk" fill="#6366F1" radius={[0, 0, 4, 4]} barSize={24} />
+                        <Bar dataKey="free" name="Free Users" stackId="hsk" fill="#CBD5E1" radius={[4, 4, 0, 0]} barSize={24} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

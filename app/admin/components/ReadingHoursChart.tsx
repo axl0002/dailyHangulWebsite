@@ -11,15 +11,16 @@ type ChartData = {
     total: number;
 };
 
-export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
+export default function ReadingHoursChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
     const [data, setData] = useState<ChartData[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            // Fetch ALL profiles with pagination
-            let allProfiles: { selected_categories: string[] | string | null; is_pro: boolean | null }[] = [];
+
+            // Fetch ALL non-beta profiles with pagination
+            let allProfiles: { reading_hours: string | null; is_pro: boolean | null }[] = [];
             let page = 0;
             const pageSize = 1000;
             let hasMore = true;
@@ -30,7 +31,7 @@ export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'f
 
                 let query = supabase
                     .from('profiles')
-                    .select('selected_categories, is_pro')
+                    .select('reading_hours, is_pro')
                     .eq('is_beta', false)
                     .range(from, to);
 
@@ -65,45 +66,29 @@ export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'f
                 }
             }
 
-            const profiles = allProfiles;
-
             // Process data
-            const categoryCounts: Record<string, { pro: number; free: number }> = {};
+            const stats: Record<string, { pro: number; free: number }> = {};
 
-            profiles?.forEach((profile: { selected_categories: string[] | string | null; is_pro: boolean | null }) => {
-                const categories = profile.selected_categories;
-
-                if (categories) {
-                    let catArray: string[] = [];
-
-                    if (Array.isArray(categories)) {
-                        catArray = categories;
-                    } else if (typeof categories === 'string') {
-                        // Handle comma-separated string just in case
-                        catArray = categories.split(',').map(s => s.trim());
+            allProfiles.forEach((profile) => {
+                const hours = profile.reading_hours;
+                if (hours) { // Only count if field is not null/empty
+                    const key = hours.trim();
+                    if (!stats[key]) {
+                        stats[key] = { pro: 0, free: 0 };
                     }
 
-                    catArray.forEach(cat => {
-                        if (cat) {
-                            const key = cat.trim();
-                            if (key) {
-                                if (!categoryCounts[key]) {
-                                    categoryCounts[key] = { pro: 0, free: 0 };
-                                }
-
-                                if (profile.is_pro) {
-                                    categoryCounts[key].pro++;
-                                } else {
-                                    categoryCounts[key].free++;
-                                }
-                            }
-                        }
-                    });
+                    if (profile.is_pro) {
+                        stats[key].pro++;
+                    } else {
+                        stats[key].free++;
+                    }
+                } else {
+                    // Skip unknown
                 }
             });
 
             // Convert to array and sort by total descending
-            const chartData = Object.entries(categoryCounts)
+            const chartData = Object.entries(stats)
                 .map(([name, counts]) => ({
                     name,
                     pro: counts.pro,
@@ -127,37 +112,30 @@ export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'f
 
     if (data.length === 0) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">No Category data available</p>
-            <p className="text-sm text-gray-400 mt-1">User interests will appear here.</p>
+            <p className="text-gray-500 font-medium">No &apos;Reading Hours&apos; data available</p>
         </div>
     );
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
-            <h3 className="text-lg font-bold mb-6 text-gray-900">Selected Categories</h3>
-            <div className="h-[500px] w-full">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <h3 className="text-lg font-bold mb-6 text-gray-900">Reading Hours</h3>
+            <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={data}
-                        layout="vertical"
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
-                            type="number"
+                            dataKey="name"
                             tick={{ fontSize: 11, fill: '#6B7280' }}
                             tickLine={false}
                             axisLine={false}
-                            allowDecimals={false}
                         />
                         <YAxis
-                            type="category"
-                            dataKey="name"
-                            width={140}
                             tick={{ fontSize: 11, fill: '#6B7280' }}
                             tickLine={false}
                             axisLine={false}
-                            interval={0}
                         />
                         <Tooltip
                             cursor={{ fill: '#F9FAFB' }}
@@ -196,9 +174,9 @@ export default function CategoryChart({ filter }: { filter?: 'all' | 'true' | 'f
                                 return null;
                             }}
                         />
-                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                        <Bar dataKey="pro" name="Pro Users" stackId="category" fill="#6366F1" radius={[0, 0, 4, 4]} barSize={24} />
-                        <Bar dataKey="free" name="Free Users" stackId="category" fill="#CBD5E1" radius={[4, 4, 0, 0]} barSize={24} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        <Bar dataKey="pro" name="Pro Users" stackId="users" fill="#6366F1" radius={[0, 0, 4, 4]} barSize={32} />
+                        <Bar dataKey="free" name="Free Users" stackId="users" fill="#CBD5E1" radius={[4, 4, 0, 0]} barSize={32} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

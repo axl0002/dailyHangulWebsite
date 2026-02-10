@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
 type ChartData = {
     name: string;
-    value: number;
+    pro: number;
+    free: number;
+    total: number;
 };
 
 export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
@@ -16,30 +18,59 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            // Fetch profiles with survey_responses
-            let query = supabase
-                .from('profiles')
-                .select('survey_responses')
-                .eq('is_beta', false);
+            // Fetch ALL profiles with pagination
+            let allProfiles: { survey_responses: Record<string, unknown> | null; is_pro: boolean | null }[] = [];
+            let page = 0;
+            const pageSize = 1000;
+            let hasMore = true;
 
-            if (filter === 'true') {
-                query = query.eq('is_pro', true);
-            } else if (filter === 'false') {
-                query = query.eq('is_pro', false);
+            while (hasMore) {
+                const from = page * pageSize;
+                const to = from + pageSize - 1;
+
+                let query = supabase
+                    .from('profiles')
+                    .select('survey_responses, is_pro')
+                    .eq('is_beta', false)
+                    .range(from, to);
+
+                if (filter === 'true') {
+                    query = query.eq('is_pro', true);
+                } else if (filter === 'false') {
+                    query = query.eq('is_pro', false);
+                }
+
+                const { data: batch, error } = await query;
+
+                if (error) {
+                    console.error('Error fetching profiles:', error);
+                    setLoading(false);
+                    return;
+                }
+
+                if (batch && batch.length > 0) {
+                    allProfiles = [...allProfiles, ...batch];
+                    if (batch.length < pageSize) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                }
+
+                page++;
+
+                // Safety break
+                if (allProfiles.length > 50000) {
+                    hasMore = false;
+                }
             }
 
-            const { data: profiles, error } = await query;
-
-            if (error) {
-                console.error('Error fetching profiles:', error);
-                setLoading(false);
-                return;
-            }
+            const profiles = allProfiles;
 
             // Process data
-            const reasonCounts: Record<string, number> = {};
+            const reasonCounts: Record<string, { pro: number; free: number }> = {};
 
-            profiles?.forEach((profile: { survey_responses: Record<string, unknown> | null }) => {
+            profiles?.forEach((profile: { survey_responses: Record<string, unknown> | null; is_pro: boolean | null }) => {
                 const responses = profile.survey_responses;
                 // Check if we have valid survey responses
                 if (responses && typeof responses === 'object' && !Array.isArray(responses)) {
@@ -48,15 +79,28 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
 
                     if (reason && typeof reason === 'string') {
                         const key = reason.trim();
-                        reasonCounts[key] = (reasonCounts[key] || 0) + 1;
+                        if (!reasonCounts[key]) {
+                            reasonCounts[key] = { pro: 0, free: 0 };
+                        }
+
+                        if (profile.is_pro) {
+                            reasonCounts[key].pro++;
+                        } else {
+                            reasonCounts[key].free++;
+                        }
                     }
                 }
             });
 
-            // Convert to array and sort by count descending
+            // Convert to array and sort by total descending
             const chartData = Object.entries(reasonCounts)
-                .map(([name, value]) => ({ name, value }))
-                .sort((a, b) => b.value - a.value);
+                .map(([name, counts]) => ({
+                    name,
+                    pro: counts.pro,
+                    free: counts.free,
+                    total: counts.pro + counts.free
+                }))
+                .sort((a, b) => b.total - a.total);
 
             setData(chartData);
             setLoading(false);
@@ -89,7 +133,13 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
-                        <XAxis type="number" hide />
+                        <XAxis
+                            type="number"
+                            tick={{ fontSize: 11, fill: '#6B7280' }}
+                            tickLine={false}
+                            axisLine={false}
+                            allowDecimals={false}
+                        />
                         <YAxis
                             type="category"
                             dataKey="name"
@@ -100,13 +150,44 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
                         />
                         <Tooltip
                             cursor={{ fill: '#F9FAFB' }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                            content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    return (
+                                        <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
+                                            <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                                            {payload.map((entry: { name: string; value: number; color: string; payload: { total: number } }, index: number) => {
+                                                const isPro = entry.name === 'Pro Users';
+                                                const colorClass = isPro ? 'text-indigo-600' : 'text-gray-700';
+                                                const value = entry.value;
+                                                const total = entry.payload.total;
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2 h-2 rounded-full"
+                                                                style={{ backgroundColor: entry.color }}
+                                                            />
+                                                            <span className={`text-sm font-medium ${colorClass}`}>
+                                                                {entry.name}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${colorClass}`}>
+                                                            {value} ({percentage}%)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
-                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={['#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'][index % 4] || '#F59E0B'} />
-                            ))}
-                        </Bar>
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                        <Bar dataKey="pro" name="Pro Users" stackId="reason" fill="#6366F1" radius={[0, 0, 4, 4]} barSize={24} />
+                        <Bar dataKey="free" name="Free Users" stackId="reason" fill="#CBD5E1" radius={[4, 4, 0, 0]} barSize={24} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

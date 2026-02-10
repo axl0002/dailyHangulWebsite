@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 import ReferralChart from "../components/ReferralChart";
 import UserGrowthChart from "../components/UserGrowthChart";
+import ReadingHoursChart from "../components/ReadingHoursChart";
 import HSKLevelChart from "../components/HSKLevelChart";
 import ReasonChart from "../components/ReasonChart";
 import TimezoneChart from "../components/TimezoneChart";
@@ -85,11 +86,12 @@ export default function AdminDashboard() {
                 <div className="col-span-1 md:col-span-2">
                     <UserGrowthChart filter={filter} />
                 </div>
-                <ReferralChart filter={filter} />
+                <ReadingHoursChart filter={filter} />
                 <HSKLevelChart filter={filter} />
                 <ReasonChart filter={filter} />
-                <TimezoneChart filter={filter} />
+                <ReferralChart filter={filter} />
                 <CategoryChart filter={filter} />
+                <TimezoneChart filter={filter} />
             </div>
         </div>
     );

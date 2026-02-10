@@ -168,22 +168,55 @@ export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 
                             axisLine={false}
                         />
                         <Tooltip
-                            labelFormatter={(value) => {
-                                const [year, month, day] = value.split('-');
-                                return `${month}/${day}/${year}`;
-                            }}
-                            formatter={(value: number | undefined, name: string | undefined, props: { payload?: { total: number } } | undefined) => {
-                                if (typeof value !== 'number' || !props?.payload) return [value, name];
-                                const total = props.payload.total;
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                return [`${value} (${percentage}%)`, name];
-                            }}
                             cursor={{ fill: '#F9FAFB' }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                            content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    // Custom label formatting for UserGrowthChart
+                                    let formattedLabel = label;
+                                    if (typeof label === 'string') {
+                                        const dateParts = label.split('-');
+                                        if (dateParts.length === 3) {
+                                            formattedLabel = `${dateParts[1]}/${dateParts[2]}/${dateParts[0]}`;
+                                        }
+                                    }
+
+                                    return (
+                                        <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
+                                            <p className="font-semibold text-gray-900 mb-2">{formattedLabel}</p>
+                                            {payload.map((entry: { name: string; value: number; color: string; payload: { total: number } }, index: number) => {
+                                                const isPro = entry.name === 'Pro Users';
+                                                // Pro uses Indigo-600, Free uses Gray-700 for better contrast
+                                                const colorClass = isPro ? 'text-indigo-600' : 'text-gray-700';
+                                                const value = entry.value;
+                                                const total = entry.payload.total;
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2 h-2 rounded-full"
+                                                                style={{ backgroundColor: entry.color }}
+                                                            />
+                                                            <span className={`text-sm font-medium ${colorClass}`}>
+                                                                {entry.name}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${colorClass}`}>
+                                                            {value} ({percentage}%)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
                         <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                        <Bar dataKey="free" name="Free Users" stackId="users" fill="#94A3B8" radius={[0, 0, 4, 4]} />
-                        <Bar dataKey="pro" name="Pro Users" stackId="users" fill="#6366F1" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="pro" name="Pro Users" stackId="users" fill="#6366F1" radius={[0, 0, 4, 4]} />
+                        <Bar dataKey="free" name="Free Users" stackId="users" fill="#CBD5E1" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

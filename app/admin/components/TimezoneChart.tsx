@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
 type ChartData = {
     name: string;
-    value: number;
+    pro: number;
+    free: number;
+    total: number;
 };
 
 export default function TimezoneChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
@@ -16,54 +18,84 @@ export default function TimezoneChart({ filter }: { filter?: 'all' | 'true' | 'f
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            // Fetch profiles with timezone
-            let query = supabase
-                .from('profiles')
-                .select('timezone')
-                .eq('is_beta', false);
+            // Fetch ALL profiles with pagination
+            let allProfiles: { timezone: string | null; is_pro: boolean | null }[] = [];
+            let page = 0;
+            const pageSize = 1000;
+            let hasMore = true;
 
-            if (filter === 'true') {
-                query = query.eq('is_pro', true);
-            } else if (filter === 'false') {
-                query = query.eq('is_pro', false);
+            while (hasMore) {
+                const from = page * pageSize;
+                const to = from + pageSize - 1;
+
+                let query = supabase
+                    .from('profiles')
+                    .select('timezone, is_pro')
+                    .eq('is_beta', false)
+                    .range(from, to);
+
+                if (filter === 'true') {
+                    query = query.eq('is_pro', true);
+                } else if (filter === 'false') {
+                    query = query.eq('is_pro', false);
+                }
+
+                const { data: batch, error } = await query;
+
+                if (error) {
+                    console.error('Error fetching profiles:', error);
+                    setLoading(false);
+                    return;
+                }
+
+                if (batch && batch.length > 0) {
+                    allProfiles = [...allProfiles, ...batch];
+                    if (batch.length < pageSize) {
+                        hasMore = false;
+                    }
+                } else {
+                    hasMore = false;
+                }
+
+                page++;
+
+                // Safety break
+                if (allProfiles.length > 50000) {
+                    hasMore = false;
+                }
             }
 
-            const { data: profiles, error } = await query;
-
-            if (error) {
-                console.error('Error fetching profiles:', error);
-                setLoading(false);
-                return;
-            }
+            const profiles = allProfiles;
 
             // Process data
-            const timezoneCounts: Record<string, number> = {};
+            const timezoneCounts: Record<string, { pro: number; free: number }> = {};
 
-            profiles?.forEach((profile: { timezone: string | null }) => {
+            profiles?.forEach((profile: { timezone: string | null; is_pro: boolean | null }) => {
                 const tz = profile.timezone;
                 if (tz) {
-                    // Start extracting the region (e.g., "America" from "America/New_York")
-                    // or maybe just keep the whole thing if the user wants specific locations.
-                    // The prompt said "geographic location using the timezone column".
-                    // Full timezone strings can be many diverse strings. 
-                    // Let's try to group by the primary region (before the first slash)
-                    // or just show the top timezones.
-
-                    // Let's stick to the raw timezone string first as it's more accurate, 
-                    // maybe truncated if too long?
-                    // Actually, grouping by Region (e.g. Asia, Europe, America) might be better for a summary,
-                    // but specific timezones give more detail. 
-                    // Let's use the full string but sort by count.
                     const key = tz.trim();
-                    timezoneCounts[key] = (timezoneCounts[key] || 0) + 1;
+                    if (!timezoneCounts[key]) {
+                        timezoneCounts[key] = { pro: 0, free: 0 };
+                    }
+
+                    if (profile.is_pro) {
+                        timezoneCounts[key].pro++;
+                    } else {
+                        timezoneCounts[key].free++;
+                    }
                 }
             });
 
-            // Convert to array and sort by count descending
+            // Convert to array and sort by total descending
             const chartData = Object.entries(timezoneCounts)
-                .map(([name, value]) => ({ name, value }))
-                .sort((a, b) => b.value - a.value)
-                .slice(0, 15); // Limit to top 15 to avoid clutter
+                .map(([name, counts]) => ({
+                    name,
+                    pro: counts.pro,
+                    free: counts.free,
+                    total: counts.pro + counts.free
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 15); // Limit to top 15
 
             setData(chartData);
             setLoading(false);
@@ -96,7 +128,13 @@ export default function TimezoneChart({ filter }: { filter?: 'all' | 'true' | 'f
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
-                        <XAxis type="number" hide />
+                        <XAxis
+                            type="number"
+                            tick={{ fontSize: 11, fill: '#6B7280' }}
+                            tickLine={false}
+                            axisLine={false}
+                            allowDecimals={false}
+                        />
                         <YAxis
                             type="category"
                             dataKey="name"
@@ -108,13 +146,44 @@ export default function TimezoneChart({ filter }: { filter?: 'all' | 'true' | 'f
                         />
                         <Tooltip
                             cursor={{ fill: '#F9FAFB' }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                            content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    return (
+                                        <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
+                                            <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                                            {payload.map((entry: { name: string; value: number; color: string; payload: { total: number } }, index: number) => {
+                                                const isPro = entry.name === 'Pro Users';
+                                                const colorClass = isPro ? 'text-indigo-600' : 'text-gray-700';
+                                                const value = entry.value;
+                                                const total = entry.payload.total;
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className="w-2 h-2 rounded-full"
+                                                                style={{ backgroundColor: entry.color }}
+                                                            />
+                                                            <span className={`text-sm font-medium ${colorClass}`}>
+                                                                {entry.name}
+                                                            </span>
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${colorClass}`}>
+                                                            {value} ({percentage}%)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            }}
                         />
-                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={['#6366F1', '#818CF8', '#A5B4FC', '#C7D2FE'][index % 4] || '#6366F1'} />
-                            ))}
-                        </Bar>
+                        <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                        <Bar dataKey="pro" name="Pro Users" stackId="timezone" fill="#6366F1" radius={[0, 0, 4, 4]} barSize={20} />
+                        <Bar dataKey="free" name="Free Users" stackId="timezone" fill="#CBD5E1" radius={[4, 4, 0, 0]} barSize={20} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
