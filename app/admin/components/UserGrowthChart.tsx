@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useEffect, useState, useCallback } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
 type ChartData = {
@@ -11,14 +11,63 @@ type ChartData = {
     total: number;
 };
 
+function formatDateLabel(dateStr: string): string {
+    const [year, month, day] = dateStr.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
+}
+
 export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
     const [data, setData] = useState<ChartData[]>([]);
     const [loading, setLoading] = useState(true);
     const [debugInfo, setDebugInfo] = useState({ fetched: 0, displayed: 0, totalInPeriod: 0 });
+    const [days, setDays] = useState<14 | 30>(14);
+    const [pageOffset, setPageOffset] = useState(0);
+    const [earliestDate, setEarliestDate] = useState<string | null>(null);
+
+    // Fetch earliest profile date once on mount
+    useEffect(() => {
+        const fetchEarliest = async () => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('created_at')
+                .eq('is_beta', false)
+                .order('created_at', { ascending: true })
+                .limit(1);
+            if (data && data.length > 0) {
+                setEarliestDate(data[0].created_at.split('T')[0]);
+            }
+        };
+        fetchEarliest();
+    }, []);
+
+    // Compute the date window based on days + pageOffset
+    const getDateWindow = useCallback(() => {
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() - pageOffset * days);
+        endDate.setHours(23, 59, 59, 999);
+
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - days + 1);
+        startDate.setHours(0, 0, 0, 0);
+
+        return { startDate, endDate };
+    }, [days, pageOffset]);
+
+    // Check if we can go further back
+    const canGoBack = useCallback(() => {
+        if (!earliestDate) return false;
+        const { startDate } = getDateWindow();
+        const earliest = new Date(earliestDate);
+        earliest.setHours(0, 0, 0, 0);
+        return startDate > earliest;
+    }, [earliestDate, getDateWindow]);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
+
+            const { endDate } = getDateWindow();
 
             // Fetch ALL non-beta profiles with pagination
             let allProfiles: { created_at: string; is_pro: boolean | null }[] = [];
@@ -70,20 +119,12 @@ export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 
 
             const profiles = allProfiles;
 
-            // Calculate date 14 days ago (start of day)
-            const today = new Date();
-            today.setHours(23, 59, 59, 999); // End of today
-
-            const startDate = new Date();
-            startDate.setDate(today.getDate() - 14);
-            startDate.setHours(0, 0, 0, 0); // Start of 14 days ago
-
             // Process data
             const dailyStats: Record<string, { pro: number; free: number }> = {};
 
-            // Initialize buckets for the last 14 days
-            for (let i = 0; i < 14; i++) {
-                const d = new Date();
+            // Initialize buckets for the date window
+            for (let i = 0; i < days; i++) {
+                const d = new Date(endDate);
                 d.setDate(d.getDate() - i);
                 const dateString = d.toISOString().split('T')[0];
                 dailyStats[dateString] = { pro: 0, free: 0 };
@@ -97,8 +138,6 @@ export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 
                 const profileDate = new Date(profile.created_at);
                 const dateString = profileDate.toISOString().split('T')[0];
 
-                // Check if profile is within the logical 14 day window
-                // We use the string key match which effectively groups by UTC day
                 if (dailyStats[dateString]) {
                     if (profile.is_pro) {
                         dailyStats[dateString].pro++;
@@ -129,21 +168,86 @@ export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 
         };
 
         fetchData();
-    }, [filter]);
+    }, [filter, days, pageOffset, getDateWindow]);
+
+    // Date range label for display
+    const { startDate, endDate } = getDateWindow();
+    const startLabel = formatDateLabel(startDate.toISOString().split('T')[0]);
+    const endLabel = formatDateLabel(endDate.toISOString().split('T')[0]);
+
+    // 7 days ago reference line
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+    const showSevenDayLine = data.some(d => d.date === sevenDaysAgoStr);
 
     if (loading) return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-center h-[400px]">
-            <span className="text-gray-400">Loading chart data...</span>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[460px]">
+            <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
+                <h3 className="text-lg font-bold text-gray-900">User Growth</h3>
+                <div className="flex items-center gap-2">
+                    <button disabled className="p-1.5 rounded-md text-gray-300 border border-gray-100">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <div className="bg-white p-0.5 rounded-md border border-gray-200 flex">
+                        <button className={`px-3 py-1 text-xs font-medium rounded ${days === 14 ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>14d</button>
+                        <button className={`px-3 py-1 text-xs font-medium rounded ${days === 30 ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>30d</button>
+                    </div>
+                    <button disabled className="p-1.5 rounded-md text-gray-300 border border-gray-100">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+                <span className="text-gray-400">Loading chart data...</span>
+            </div>
         </div>
     );
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 col-span-1 md:col-span-2">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-900">User Growth (Last 14 Days)</h3>
-                <span className="text-xs text-gray-400">
-                    {debugInfo.totalInPeriod} new users in period ({debugInfo.fetched} total scanned)
-                </span>
+            <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
+                <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-bold text-gray-900">User Growth</h3>
+                    <span className="text-sm text-gray-500">{startLabel} – {endLabel}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={() => setPageOffset(prev => prev + 1)}
+                            disabled={!canGoBack()}
+                            className={`p-1.5 rounded-md border transition-colors ${canGoBack() ? 'text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900' : 'text-gray-300 border-gray-100 cursor-not-allowed'}`}
+                            title="Previous period"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <div className="bg-white p-0.5 rounded-md border border-gray-200 flex">
+                            <button
+                                onClick={() => { setDays(14); setPageOffset(0); }}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${days === 14 ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                14d
+                            </button>
+                            <button
+                                onClick={() => { setDays(30); setPageOffset(0); }}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${days === 30 ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                30d
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => setPageOffset(prev => Math.max(0, prev - 1))}
+                            disabled={pageOffset === 0}
+                            className={`p-1.5 rounded-md border transition-colors ${pageOffset > 0 ? 'text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900' : 'text-gray-300 border-gray-100 cursor-not-allowed'}`}
+                            title="Next period"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                        {debugInfo.totalInPeriod} new users in period ({debugInfo.fetched} total scanned)
+                    </span>
+                </div>
             </div>
             <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -214,6 +318,14 @@ export default function UserGrowthChart({ filter }: { filter?: 'all' | 'true' | 
                                 return null;
                             }}
                         />
+                        {showSevenDayLine && (
+                            <ReferenceLine
+                                x={sevenDaysAgoStr}
+                                stroke="#9CA3AF"
+                                strokeDasharray="4 4"
+                                label={{ value: '7d ago', position: 'top', fill: '#9CA3AF', fontSize: 11 }}
+                            />
+                        )}
                         <Legend wrapperStyle={{ paddingTop: '20px' }} />
                         <Bar dataKey="pro" name="Pro Users" stackId="users" fill="#6366F1" radius={[0, 0, 4, 4]} />
                         <Bar dataKey="free" name="Free Users" stackId="users" fill="#CBD5E1" radius={[4, 4, 0, 0]} />

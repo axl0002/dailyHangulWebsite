@@ -55,6 +55,20 @@ export async function middleware(request: NextRequest) {
             url.pathname = '/admin/login'
             return NextResponse.redirect(url)
         }
+
+        // Server-side admin role check
+        const { data: role } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'admin')
+            .single()
+
+        if (!role) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/'
+            return NextResponse.redirect(url)
+        }
     }
 
     return response
