@@ -10,6 +10,7 @@ import HSKLevelChart from "../components/HSKLevelChart";
 import ReasonChart from "../components/ReasonChart";
 import TimezoneChart from "../components/TimezoneChart";
 import CategoryChart from "../components/CategoryChart";
+import ProUserPercentageChart from "../components/ProUserPercentageChart";
 
 export default function AdminDashboard() {
     const [filter, setFilter] = useState<'all' | 'true' | 'false'>('all');
@@ -85,6 +86,9 @@ export default function AdminDashboard() {
                 {/* Analytics Section */}
                 <div className="col-span-1 md:col-span-2">
                     <UserGrowthChart filter={filter} />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                    <ProUserPercentageChart />
                 </div>
                 <ReadingHoursChart filter={filter} />
                 <HSKLevelChart filter={filter} />
