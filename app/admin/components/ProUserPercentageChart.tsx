@@ -175,7 +175,7 @@ export default function ProUserPercentageChart() {
     if (loading) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[460px]">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
-                <h3 className="text-lg font-bold text-gray-900">Pro User % (Daily Signups)</h3>
+                <h3 className="text-lg font-bold text-gray-900">% Through Paywall</h3>
                 <div className="flex items-center gap-2">
                     <button disabled className="p-1.5 rounded-md text-gray-300 border border-gray-100">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
@@ -199,7 +199,7 @@ export default function ProUserPercentageChart() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 col-span-1 md:col-span-2">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
                 <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-gray-900">Pro User % (Daily Signups)</h3>
+                    <h3 className="text-lg font-bold text-gray-900">% Through Paywall</h3>
                     <span className="text-sm text-gray-500">{startLabel} – {endLabel}</span>
                 </div>
                 <div className="flex items-center gap-3">
