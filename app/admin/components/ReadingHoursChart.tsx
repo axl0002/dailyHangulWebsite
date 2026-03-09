@@ -144,11 +144,11 @@ export default function ReadingHoursChart({ filter }: { filter?: 'all' | 'true' 
                                     return (
                                         <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
                                             <p className="font-semibold text-gray-900 mb-2">{label}</p>
-                                            {payload.map((entry: { name: string; value: number; color: string; payload: { total: number } }, index: number) => {
+                                            {payload.map((entry, index) => {
                                                 const isPro = entry.name === 'Pro Users';
                                                 const colorClass = isPro ? 'text-indigo-600' : 'text-gray-700';
-                                                const value = entry.value;
-                                                const total = entry.payload.total;
+                                                const value = entry.value as number;
+                                                const total = (entry.payload as { total: number }).total;
                                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
 
                                                 return (
