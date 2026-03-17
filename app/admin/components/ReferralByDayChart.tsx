@@ -30,6 +30,17 @@ const COLORS = [
     '#CBD5E1', // slate (fallback)
 ];
 
+// Stable color assignment: each source always gets the same color regardless of sort order
+const SOURCE_COLOR_MAP: Record<string, string> = {};
+let nextColorIndex = 0;
+function getSourceColor(source: string): string {
+    if (!(source in SOURCE_COLOR_MAP)) {
+        SOURCE_COLOR_MAP[source] = COLORS[nextColorIndex % COLORS.length];
+        nextColorIndex++;
+    }
+    return SOURCE_COLOR_MAP[source];
+}
+
 export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
     const [data, setData] = useState<ChartData[]>([]);
     const [sources, setSources] = useState<string[]>([]);
@@ -375,7 +386,7 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
                                 dataKey={source}
                                 name={source}
                                 stackId="referral"
-                                fill={COLORS[i % COLORS.length]}
+                                fill={getSourceColor(source)}
                                 radius={i === sources.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                             />
                         ))}
