@@ -12,10 +12,12 @@ import TimezoneChart from "../components/TimezoneChart";
 import CategoryChart from "../components/CategoryChart";
 import ProUserPercentageChart from "../components/ProUserPercentageChart";
 import ReferralByDayChart from "../components/ReferralByDayChart";
+import { useDateLabels } from "../components/useDateLabels";
 
 export default function AdminDashboard() {
     const [filter, setFilter] = useState<'all' | 'true' | 'false'>('all');
     const [userCount, setUserCount] = useState<number | null>(null);
+    const { labels, addLabel, deleteLabel } = useDateLabels();
 
     useEffect(() => {
         const fetchUserCount = async () => {
@@ -86,13 +88,13 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Analytics Section */}
                 <div className="col-span-1 md:col-span-2">
-                    <UserGrowthChart filter={filter} />
+                    <UserGrowthChart filter={filter} dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
                 </div>
                 <div className="col-span-1 md:col-span-2">
-                    <ReferralByDayChart filter={filter} />
+                    <ReferralByDayChart filter={filter} dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
                 </div>
                 <div className="col-span-1 md:col-span-2">
-                    <ProUserPercentageChart />
+                    <ProUserPercentageChart dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
                 </div>
                 <ReadingHoursChart filter={filter} />
                 <HSKLevelChart filter={filter} />

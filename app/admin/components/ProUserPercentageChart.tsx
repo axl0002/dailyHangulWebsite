@@ -3,6 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import DateLabelModal from './DateLabelModal';
+import ClickableXAxisTick from './ClickableXAxisTick';
+import StackedReferenceLabel from './StackedReferenceLabel';
+import { DateLabel } from './useDateLabels';
 
 type ChartData = {
     date: string;
@@ -11,19 +15,26 @@ type ChartData = {
     total: number;
 };
 
+type Props = {
+    dateLabels: Record<string, DateLabel[]>;
+    onAddLabel: (date: string, label: string) => Promise<void>;
+    onDeleteLabel: (id: string) => Promise<void>;
+};
+
 function formatDateLabel(dateStr: string): string {
     const [year, month, day] = dateStr.split('-');
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${monthNames[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
 }
 
-export default function ProUserPercentageChart() {
+export default function ProUserPercentageChart({ dateLabels, onAddLabel, onDeleteLabel }: Props) {
     const [data, setData] = useState<ChartData[]>([]);
     const [loading, setLoading] = useState(true);
     const [debugInfo, setDebugInfo] = useState({ fetched: 0, totalInPeriod: 0 });
     const [days, setDays] = useState<14 | 30 | 60 | 90>(14);
     const [pageOffset, setPageOffset] = useState(0);
     const [earliestDate, setEarliestDate] = useState<string | null>(null);
+    const [labelModal, setLabelModal] = useState<{ date: string; position: { x: number; y: number } } | null>(null);
 
     // Fetch earliest profile date once on mount
     useEffect(() => {
@@ -172,6 +183,20 @@ export default function ProUserPercentageChart() {
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     const showSevenDayLine = data.some(d => d.date === sevenDaysAgoStr);
 
+    const visibleLabels = data
+        .filter(d => dateLabels[d.date]?.length > 0)
+        .map(d => ({
+            date: d.date,
+            labels: dateLabels[d.date].map(dl => dl.label)
+        }));
+
+    const handleDateClick = (date: string, clientX: number, clientY: number) => {
+        setLabelModal({
+            date,
+            position: { x: Math.min(clientX, window.innerWidth - 300), y: Math.max(10, clientY - 200) }
+        });
+    };
+
     if (loading) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[460px]">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
@@ -263,13 +288,11 @@ export default function ProUserPercentageChart() {
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
                             dataKey="date"
-                            tickFormatter={(value) => {
-                                const [, month, day] = value.split('-');
-                                return `${parseInt(month)}/${parseInt(day)}`;
-                            }}
-                            tick={{ fontSize: 12, fill: '#6B7280' }}
+                            tick={<ClickableXAxisTick dateLabels={dateLabels} onDateClick={handleDateClick} totalDays={days} />}
                             tickLine={false}
                             axisLine={false}
+                            interval={0}
+                            height={days > 30 ? 60 : 30}
                         />
                         <YAxis
                             tick={{ fontSize: 12, fill: '#6B7280' }}
@@ -291,10 +314,16 @@ export default function ProUserPercentageChart() {
                                     }
 
                                     const entry = payload[0]?.payload as ChartData;
+                                    const dateLabelList = typeof label === 'string' ? dateLabels[label] : undefined;
 
                                     return (
                                         <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[150px]">
                                             <p className="font-semibold text-gray-900 mb-2">{formattedLabel}</p>
+                                            {dateLabelList && dateLabelList.length > 0 && dateLabelList.map((dl) => (
+                                                <p key={dl.id} className="text-xs font-medium text-amber-600 mb-1 flex items-center gap-1">
+                                                    <span>&#9873;</span> {dl.label}
+                                                </p>
+                                            ))}
                                             <div className="flex items-center justify-between gap-4 mb-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-indigo-500" />
@@ -324,6 +353,16 @@ export default function ProUserPercentageChart() {
                                 label={{ value: '7d ago', position: 'top', fill: '#9CA3AF', fontSize: 11 }}
                             />
                         )}
+                        {visibleLabels.map(({ date, labels: lbls }) => (
+                            <ReferenceLine
+                                key={date}
+                                x={date}
+                                stroke="#F59E0B"
+                                strokeDasharray="3 3"
+                                strokeWidth={2}
+                                label={<StackedReferenceLabel labels={lbls} />}
+                            />
+                        ))}
                         <Area
                             type="monotone"
                             dataKey="percentage"
@@ -337,6 +376,16 @@ export default function ProUserPercentageChart() {
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
+            {labelModal && (
+                <DateLabelModal
+                    date={labelModal.date}
+                    existingLabels={dateLabels[labelModal.date] || []}
+                    position={labelModal.position}
+                    onAdd={onAddLabel}
+                    onDelete={onDeleteLabel}
+                    onClose={() => setLabelModal(null)}
+                />
+            )}
         </div>
     );
 }

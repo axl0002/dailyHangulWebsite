@@ -3,11 +3,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import DateLabelModal from './DateLabelModal';
+import ClickableXAxisTick from './ClickableXAxisTick';
+import StackedReferenceLabel from './StackedReferenceLabel';
+import { DateLabel } from './useDateLabels';
 
 type ChartData = {
     date: string;
     total: number;
     [key: string]: string | number;
+};
+
+type Props = {
+    filter?: 'all' | 'true' | 'false';
+    dateLabels: Record<string, DateLabel[]>;
+    onAddLabel: (date: string, label: string) => Promise<void>;
+    onDeleteLabel: (id: string) => Promise<void>;
 };
 
 function formatDateLabel(dateStr: string): string {
@@ -41,7 +52,7 @@ function getSourceColor(source: string): string {
     return SOURCE_COLOR_MAP[source];
 }
 
-export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
+export default function ReferralByDayChart({ filter, dateLabels, onAddLabel, onDeleteLabel }: Props) {
     const [data, setData] = useState<ChartData[]>([]);
     const [sources, setSources] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,6 +60,7 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
     const [days, setDays] = useState<14 | 30 | 60 | 90>(14);
     const [pageOffset, setPageOffset] = useState(0);
     const [earliestDate, setEarliestDate] = useState<string | null>(null);
+    const [labelModal, setLabelModal] = useState<{ date: string; position: { x: number; y: number } } | null>(null);
 
     useEffect(() => {
         const fetchEarliest = async () => {
@@ -214,6 +226,20 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     const showSevenDayLine = data.some(d => d.date === sevenDaysAgoStr);
 
+    const visibleLabels = data
+        .filter(d => dateLabels[d.date]?.length > 0)
+        .map(d => ({
+            date: d.date,
+            labels: dateLabels[d.date].map(dl => dl.label)
+        }));
+
+    const handleDateClick = (date: string, clientX: number, clientY: number) => {
+        setLabelModal({
+            date,
+            position: { x: Math.min(clientX, window.innerWidth - 300), y: Math.max(10, clientY - 200) }
+        });
+    };
+
     if (loading) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col h-[460px]">
             <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
@@ -305,13 +331,11 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
                             dataKey="date"
-                            tickFormatter={(value) => {
-                                const [, month, day] = value.split('-');
-                                return `${parseInt(month)}/${parseInt(day)}`;
-                            }}
-                            tick={{ fontSize: 12, fill: '#6B7280' }}
+                            tick={<ClickableXAxisTick dateLabels={dateLabels} onDateClick={handleDateClick} totalDays={days} />}
                             tickLine={false}
                             axisLine={false}
+                            interval={0}
+                            height={days > 30 ? 60 : 30}
                         />
                         <YAxis
                             tick={{ fontSize: 12, fill: '#6B7280' }}
@@ -334,10 +358,16 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
                                     const total = (payload[0]?.payload as ChartData)?.total || 0;
                                     // Filter out zero-value entries and sort by value descending
                                     const nonZero = payload.filter(e => (e.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number));
+                                    const dateLabelList = typeof label === 'string' ? dateLabels[label] : undefined;
 
                                     return (
                                         <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-xl min-w-[180px]">
                                             <p className="font-semibold text-gray-900 mb-2">{formattedLabel}</p>
+                                            {dateLabelList && dateLabelList.length > 0 && dateLabelList.map((dl) => (
+                                                <p key={dl.id} className="text-xs font-medium text-amber-600 mb-1 flex items-center gap-1">
+                                                    <span>&#9873;</span> {dl.label}
+                                                </p>
+                                            ))}
                                             {nonZero.map((entry, index) => {
                                                 const value = entry.value as number;
                                                 const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
@@ -379,6 +409,16 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
                                 label={{ value: '7d ago', position: 'top', fill: '#9CA3AF', fontSize: 11 }}
                             />
                         )}
+                        {visibleLabels.map(({ date, labels: lbls }) => (
+                            <ReferenceLine
+                                key={date}
+                                x={date}
+                                stroke="#F59E0B"
+                                strokeDasharray="3 3"
+                                strokeWidth={2}
+                                label={<StackedReferenceLabel labels={lbls} />}
+                            />
+                        ))}
                         <Legend wrapperStyle={{ paddingTop: '20px' }} />
                         {sources.map((source, i) => (
                             <Bar
@@ -393,6 +433,16 @@ export default function ReferralByDayChart({ filter }: { filter?: 'all' | 'true'
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+            {labelModal && (
+                <DateLabelModal
+                    date={labelModal.date}
+                    existingLabels={dateLabels[labelModal.date] || []}
+                    position={labelModal.position}
+                    onAdd={onAddLabel}
+                    onDelete={onDeleteLabel}
+                    onClose={() => setLabelModal(null)}
+                />
+            )}
         </div>
     );
 }
