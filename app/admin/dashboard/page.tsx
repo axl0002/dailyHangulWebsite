@@ -14,6 +14,7 @@ import ProUserPercentageChart from "../components/ProUserPercentageChart";
 import ReferralByDayChart from "../components/ReferralByDayChart";
 import PlatformByDayChart from "../components/PlatformByDayChart";
 import PlatformChart from "../components/PlatformChart";
+import TimezoneByDayChart from "../components/TimezoneByDayChart";
 import { useDateLabels } from "../components/useDateLabels";
 
 export default function AdminDashboard() {
@@ -97,6 +98,9 @@ export default function AdminDashboard() {
                 </div>
                 <div className="col-span-1 md:col-span-2">
                     <PlatformByDayChart filter={filter} dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                    <TimezoneByDayChart filter={filter} dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
                 </div>
                 <div className="col-span-1 md:col-span-2">
                     <ProUserPercentageChart dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />

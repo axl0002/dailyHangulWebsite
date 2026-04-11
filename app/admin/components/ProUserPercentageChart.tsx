@@ -5,7 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from '@/lib/supabase';
 import DateLabelModal from './DateLabelModal';
 import ClickableXAxisTick from './ClickableXAxisTick';
-import StackedReferenceLabel from './StackedReferenceLabel';
+import StackedReferenceLabel, { assignLabelRows, topMarginForLabelRows } from './StackedReferenceLabel';
 import { DateLabel } from './useDateLabels';
 
 type ChartData = {
@@ -183,12 +183,15 @@ export default function ProUserPercentageChart({ dateLabels, onAddLabel, onDelet
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
     const showSevenDayLine = data.some(d => d.date === sevenDaysAgoStr);
 
-    const visibleLabels = data
+    const rawLabels = data
         .filter(d => dateLabels[d.date]?.length > 0)
         .map(d => ({
             date: d.date,
             labels: dateLabels[d.date].map(dl => dl.label)
         }));
+    const visibleLabels = assignLabelRows(rawLabels, days);
+    const maxLabelRow = visibleLabels.reduce((m, e) => Math.max(m, e.row), 0);
+    const chartTopMargin = topMarginForLabelRows(maxLabelRow);
 
     const handleDateClick = (date: string, clientX: number, clientY: number) => {
         setLabelModal({
@@ -283,7 +286,7 @@ export default function ProUserPercentageChart({ dateLabels, onAddLabel, onDelet
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                         data={data}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        margin={{ top: chartTopMargin, right: 30, left: 20, bottom: 5 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
@@ -353,14 +356,14 @@ export default function ProUserPercentageChart({ dateLabels, onAddLabel, onDelet
                                 label={{ value: '7d ago', position: 'top', fill: '#9CA3AF', fontSize: 11 }}
                             />
                         )}
-                        {visibleLabels.map(({ date, labels: lbls }) => (
+                        {visibleLabels.map(({ date, labels: lbls, row }) => (
                             <ReferenceLine
                                 key={date}
                                 x={date}
                                 stroke="#F59E0B"
                                 strokeDasharray="3 3"
                                 strokeWidth={2}
-                                label={<StackedReferenceLabel labels={lbls} />}
+                                label={<StackedReferenceLabel labels={lbls} rowOffset={row} />}
                             />
                         ))}
                         <Area
