@@ -119,14 +119,12 @@ export default function Home() {
                 className="beehiiv-embed"
                 data-test-id="beehiiv-embed"
                 frameBorder="0"
-                scrolling="no"
                 style={{
                   margin: 0,
                   borderRadius: "0px",
                   backgroundColor: "transparent",
                   width: "400px",
                   maxWidth: "100%",
-                  height: "52px",
                   boxShadow: "0 0 #0000",
                 }}
               />

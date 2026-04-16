@@ -28,3 +28,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+.beehiiv-embed {
+  height: 52px;
+}
+
+@media (max-width: 640px) {
+  .beehiiv-embed {
+    height: 110px;
+  }
+}
