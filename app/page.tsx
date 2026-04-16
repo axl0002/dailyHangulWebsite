@@ -126,13 +126,13 @@ export default function Home() {
                   backgroundColor: "transparent",
                   width: "400px",
                   maxWidth: "100%",
-                  height: "47px",
+                  height: "52px",
                   boxShadow: "0 0 #0000",
                 }}
               />
               <Script
                 src="https://subscribe-forms.beehiiv.com/embed.js"
-                strategy="lazyOnload"
+                strategy="afterInteractive"
               />
               <p className="text-xs text-foreground/50 mt-1 text-center max-w-[560px]">
                 By joining, you agree to receive updates from us.
