@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Cream Light background */
-  --background: #F9F5E7;
-  /* Dark Mauve foreground for contrast */
-  --foreground: #5D3A3F;
+  /* Light background */
+  --background: #F0F4FA;
+  /* Dark foreground for contrast */
+  --foreground: #0D1B2E;
 
-  /* Terra Cotta Red - Primary */
-  --primary: #CD5E60;
-  /* Beige - Secondary */
-  --secondary: #EDDBC7;
-  /* Cream Med - Accent/Surface */
-  --accent: #F8EAD8;
+  /* Blue - Primary */
+  --primary: #154693;
+  /* Light Blue - Secondary */
+  --secondary: #C7D6EE;
+  /* Very Light Blue - Accent/Surface */
+  --accent: #E8EFF9;
 }
 
 @theme inline {

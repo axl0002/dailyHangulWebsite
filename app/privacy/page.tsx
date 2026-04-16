@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
                 <section className="space-y-4">
                     <h2 className="text-xl font-semibold text-primary">1. Introduction</h2>
                     <p>
-                        Daily Hanzi (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting it through our compliance with this policy. This policy describes the types of information we may collect from you or that you may provide when you visit the website or use our mobile application (collectively, &quot;Services&quot;) and our practices for collecting, using, maintaining, protecting, and disclosing that information.
+                        Daily Hangul (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting it through our compliance with this policy. This policy describes the types of information we may collect from you or that you may provide when you visit the website or use our mobile application (collectively, &quot;Services&quot;) and our practices for collecting, using, maintaining, protecting, and disclosing that information.
                     </p>
                 </section>
 
@@ -68,7 +68,7 @@ export default function PrivacyPolicy() {
                 <section className="space-y-4">
                     <h2 className="text-xl font-semibold text-primary">6. Data Deletion</h2>
                     <p>
-                        You have the right to request the deletion of your account and all associated personal data. To exercise this right, please contact our support team at <a href="mailto:support@dailyhanzi.app" className="text-primary hover:text-primary/70 transition-colors">support@dailyhanzi.app</a>. We will process your request in accordance with applicable laws.
+                        You have the right to request the deletion of your account and all associated personal data. To exercise this right, please contact our support team at <a href="mailto:support@dailyhangul.app" className="text-primary hover:text-primary/70 transition-colors">support@dailyhangul.app</a>. We will process your request in accordance with applicable laws.
                     </p>
                 </section>
 
@@ -76,8 +76,8 @@ export default function PrivacyPolicy() {
                     <h2 className="text-xl font-semibold text-primary">7. Contact Information</h2>
                     <p>
                         To ask questions or comment about this privacy policy and our privacy practices, contact us at:{" "}
-                        <a href="mailto:support@dailyhanzi.app" className="text-primary hover:text-primary/70 transition-colors">
-                            support@dailyhanzi.app
+                        <a href="mailto:support@dailyhangul.app" className="text-primary hover:text-primary/70 transition-colors">
+                            support@dailyhangul.app
                         </a>
                     </p>
                 </section>

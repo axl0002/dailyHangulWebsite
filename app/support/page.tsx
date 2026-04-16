@@ -16,20 +16,20 @@ export default function SupportPage() {
                 <section className="space-y-4">
                     <h2 className="text-xl font-semibold text-primary">Contact Us</h2>
                     <p>
-                        If you are experiencing issues with the Daily Hanzi app, have questions about your subscription, or want to provide feedback, please don&#39;t hesitate to reach out.
+                        If you are experiencing issues with the Daily Hangul app, have questions about your subscription, or want to provide feedback, please don&#39;t hesitate to reach out.
                     </p>
                     <p>
                         Our support team is available via email and will get back to you as soon as possible, usually within 24-48 hours.
                     </p>
                     <div className="pt-4">
                         <a
-                            href="mailto:support@dailyhanzi.app"
+                            href="mailto:support@dailyhangul.app"
                             className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-sm"
                         >
                             Email Support
                         </a>
                         <p className="mt-2 text-sm text-foreground/60">
-                            or write to us at <a href="mailto:support@dailyhanzi.app" className="text-primary hover:underline">support@dailyhanzi.app</a>
+                            or write to us at <a href="mailto:support@dailyhangul.app" className="text-primary hover:underline">support@dailyhangul.app</a>
                         </p>
                     </div>
                 </section>

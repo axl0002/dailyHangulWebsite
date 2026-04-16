@@ -10,7 +10,7 @@ type SentenceReport = {
     user_id: string;
     character_id: string;
     character_content: string;
-    sentence_chinese: string;
+    sentence_korean: string;
     sentence_pinyin: string;
     sentence_english: string;
     issue_type: string;
@@ -279,7 +279,7 @@ export default function SentenceReportsPage() {
                                 {visibleColumns.sentence && (
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[400px]">
                                         <div className="space-y-1">
-                                            <div className="font-semibold text-gray-800">{report.sentence_chinese}</div>
+                                            <div className="font-semibold text-gray-800">{report.sentence_korean}</div>
                                             <div className="italic text-gray-600">{report.sentence_pinyin}</div>
                                             <div className="text-gray-500">{report.sentence_english}</div>
                                         </div>

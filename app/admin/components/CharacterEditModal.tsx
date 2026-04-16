@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 export type ExampleSentence = {
     pinyin: string;
-    chinese: string;
+    korean: string;
     english: string;
 };
 
@@ -59,7 +59,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
     };
 
     const handleAddSentence = () => {
-        const newSentence: ExampleSentence = { chinese: "", pinyin: "", english: "" };
+        const newSentence: ExampleSentence = { korean: "", pinyin: "", english: "" };
         setEditingCharacter({
             ...editingCharacter,
             example_sentences: [...editingCharacter.example_sentences, newSentence],
@@ -229,13 +229,13 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
                                         <div className="space-y-3">
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Chinese</label>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Korean</label>
                                                 <input
                                                     type="text"
-                                                    value={sentence.chinese}
-                                                    onChange={(e) => handleSentenceChange(index, "chinese", e.target.value)}
+                                                    value={sentence.korean}
+                                                    onChange={(e) => handleSentenceChange(index, "korean", e.target.value)}
                                                     className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
-                                                    placeholder="汉字..."
+                                                    placeholder="한국어..."
                                                 />
                                             </div>
                                             <div className="grid grid-cols-1 gap-2">

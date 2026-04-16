@@ -50,7 +50,7 @@ export default function AdminDashboard() {
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Overview of Daily Hanzi performance and user metrics.</p>
+                    <p className="text-gray-600 mt-1">Overview of Daily Hangul performance and user metrics.</p>
                     {userCount !== null && (
                         <div className="mt-4 flex items-center">
                             <span className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full border border-indigo-200">

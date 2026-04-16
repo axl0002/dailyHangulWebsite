@@ -276,7 +276,7 @@ export default function CharactersPage() {
                                             <div className="space-y-2">
                                                 {char.example_sentences.slice(0, 2).map((sentence, idx) => (
                                                     <div key={idx} className="border-b last:border-0 pb-1 last:pb-0 border-gray-100">
-                                                        <div className="font-semibold text-gray-800">{sentence.chinese}</div>
+                                                        <div className="font-semibold text-gray-800">{sentence.korean}</div>
                                                         <div className="italic text-gray-600">{sentence.pinyin}</div>
                                                         <div className="text-gray-400">{sentence.english}</div>
                                                     </div>

@@ -16,10 +16,10 @@ export default function Home() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "MobileApplication",
-            "name": "Daily Hanzi",
+            "name": "Daily Hangul",
             "operatingSystem": "iOS, Android",
             "applicationCategory": "EducationalApplication",
-            "description": "Master Chinese characters (Hanzi) effortlessly on your lock screen with daily spaced repetition.",
+            "description": "Master Korean characters (Hangul) effortlessly on your lock screen with daily spaced repetition.",
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -34,7 +34,7 @@ export default function Home() {
         <div className="relative w-80 h-24">
           <Image
             src="/logo-long.png"
-            alt="Daily Hanzi Logo"
+            alt="Daily Hangul Logo"
             fill
             className="object-contain object-left"
             priority
@@ -60,27 +60,27 @@ export default function Home() {
                 <div className="w-6 h-6 rounded-full bg-primary/40 border-2 border-accent" />
               </div>
               <div className="flex items-center gap-1 text-xs font-medium text-foreground/80 pl-1">
-                <span>#1 Chinese lock screen learning app</span>
+                <span>#1 Korean lock screen learning app</span>
               </div>
             </div>
 
             {/* Headlines */}
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground leading-[1.1]">
-                Master Chinese Daily<br />
+                Master Korean Daily<br />
                 <span className="text-primary text-3xl sm:text-5xl block mt-2">
                   from Your Lock Screen
                 </span>
               </h1>
               <p className="text-lg sm:text-lg text-foreground/60 leading-relaxed max-w-md">
-                Build a new daily habit of learning Chinese the easiest way possible. Seamlessly integrated directly into your lock screen.
+                Build a new daily habit of learning Korean the easiest way possible. Seamlessly integrated directly into your lock screen.
               </p>
             </div>
 
             {/* Store Buttons */}
-            <div className="w-full pt-2 flex justify-center gap-3 flex-wrap">
+            {/* <div className="w-full pt-2 flex justify-center gap-3 flex-wrap">
               <a
-                href="https://apps.apple.com/us/app/daily-hanzi/id6756919959"
+                href="https://apps.apple.com/us/app/daily-hangul/id6756919959"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
@@ -94,7 +94,7 @@ export default function Home() {
                 </div>
               </a>
               <a
-                href="https://play.google.com/store/apps/details?id=com.alexliu.dailyhanzi"
+                href="https://play.google.com/store/apps/details?id=com.alexliu.dailyhangul"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
@@ -110,12 +110,12 @@ export default function Home() {
                   <span className="text-xl font-bold tracking-wide">Google Play</span>
                 </div>
               </a>
-            </div>
+            </div> */}
 
             {/* Waitlist Form */}
-            {/* <div className="w-full pt-2 flex flex-col items-center">
+            <div className="w-full pt-2 flex flex-col items-center">
               <iframe
-                src="https://subscribe-forms.beehiiv.com/78bf7849-7b4e-47cc-9148-e8893c4185bb"
+                src="https://subscribe-forms.beehiiv.com/52117acb-b1f7-4ccb-a133-f9caad60fff1"
                 className="beehiiv-embed"
                 data-test-id="beehiiv-embed"
                 frameBorder="0"
@@ -137,7 +137,7 @@ export default function Home() {
               <p className="text-xs text-foreground/50 mt-1 text-center max-w-[560px]">
                 By joining, you agree to receive updates from us.
               </p>
-            </div> */}
+            </div>
 
             {/* Feature Badges */}
             <div className="flex gap-6 pt-4 grayscale opacity-60">
@@ -146,9 +146,21 @@ export default function Home() {
           </div>
 
           {/* Right Column: App Preview */}
-          <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none">
+          <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none flex items-center justify-center">
+            <div className="relative w-[55%] aspect-[9/19.5]">
+              <Image
+                src="/app-preview.png"
+                alt="App Preview"
+                fill
+                className="object-cover rounded-[2.5rem] shadow-2xl border-4 border-gray-900/10 bg-white"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Original dual-phone preview (restore later) */}
+          {/* <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none">
             <div className="relative w-full h-full flex items-center justify-center">
-              {/* Main Phone */}
               <div className="relative w-[55%] aspect-[9/19.5] z-10 transform -rotate-2 -translate-x-16 lg:-translate-x-32">
                 <Image
                   src="/app-preview.png"
@@ -158,7 +170,6 @@ export default function Home() {
                   priority
                 />
               </div>
-              {/* Secondary Phone (Floating Right) */}
               <div className="absolute w-[50%] aspect-[9/19.5] z-0 transform translate-x-16 lg:translate-x-32 translate-y-12 rotate-6 opacity-100">
                 <Image
                   src="/app-preview-2.png"
@@ -169,24 +180,24 @@ export default function Home() {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Reviews Section */}
-        <div className="w-full max-w-5xl mx-auto pt-40 pb-8">
+        {/* <div className="w-full max-w-5xl mx-auto pt-40 pb-8">
           <div className="text-center space-y-3 mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
               Trusted by Learners Worldwide
             </h2>
             <p className="text-foreground/60">
-              Join thousands building their Chinese habit one character at a time.
+              Join thousands building their Korean habit one character at a time.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
                 name: "A Wang",
-                message: "If you want to speak Chinese conversationally in modern world 2026 and be able to travel around China recognizing everyday words, Daily Hanzi is the app to learn Chinese.",
+                message: "If you want to speak Korean conversationally in modern world 2026 and be able to travel around Korea recognizing everyday words, Daily Hangul is the app to learn Korean.",
               },
               {
                 name: "Syd",
@@ -194,7 +205,7 @@ export default function Home() {
               },
               {
                 name: "Ling San",
-                message: "The great thing of the APP is that it shows the Chinese characters in the lock screen of your phone to help you remember them. Overall it is a great APP for learning Chinese.",
+                message: "The great thing of the APP is that it shows the Korean characters in the lock screen of your phone to help you remember them. Overall it is a great APP for learning Korean.",
               },
             ].map((review) => (
               <div
@@ -215,17 +226,17 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Features Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-20 pb-8 w-full max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-40 pb-8 w-full max-w-5xl mx-auto">
           {/* Feature 1 */}
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="p-3.5 rounded-2xl bg-primary/5 text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Lock Screen Hanzi</h3>
+              <h3 className="font-semibold text-foreground">Lock Screen Hangul</h3>
               <p className="text-sm text-foreground/60 mt-1">Learn effortlessly every time you pick up your phone.</p>
             </div>
           </div>
@@ -256,7 +267,7 @@ export default function Home() {
 
       <footer className="w-full max-w-7xl mx-auto py-8 px-6 text-center sm:text-left z-10 border-t border-border/10 mt-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-foreground/40 gap-4">
-          <p>&copy; {new Date().getFullYear()} Daily Hanzi.</p>
+          <p>&copy; {new Date().getFullYear()} Daily Hangul.</p>
           <div className="flex gap-6">
             <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-primary transition-colors">Terms</a>
