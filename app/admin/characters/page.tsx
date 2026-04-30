@@ -25,11 +25,10 @@ export default function CharactersPage() {
     // Column Visibility
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
         id: true,
-        character: true,
-        pinyin: true,
+        word: true,
         meaning: true,
         example_sentences: true,
-        hsk_level: true,
+        topik_level: true,
         freq_rank: false, // Default hidden
         category: true,
         visible: true,
@@ -119,7 +118,7 @@ export default function CharactersPage() {
 
     const handleDelete = async (char: Character) => {
         console.log("Attempting to delete character:", char.id, char.character);
-        if (!window.confirm(`Are you sure you want to delete "${char.character}"? This action cannot be undone.`)) {
+        if (!window.confirm(`Are you sure you want to delete the word "${char.character}"? This action cannot be undone.`)) {
             console.log("Deletion cancelled by user.");
             return;
         }
@@ -139,7 +138,7 @@ export default function CharactersPage() {
 
             if (!data || data.length === 0) {
                 console.error("Delete operation returned 0 rows. RLS policy likely prevented deletion.");
-                alert("Failed to delete character. You might not have permission (RLS Policy).");
+                alert("Failed to delete word. You might not have permission (RLS Policy).");
                 return;
             }
 
@@ -152,7 +151,7 @@ export default function CharactersPage() {
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Unknown error";
             console.error("Delete operation failed:", err);
-            alert("Error deleting character: " + message);
+            alert("Error deleting word: " + message);
         }
     };
 
@@ -160,7 +159,7 @@ export default function CharactersPage() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6">Characters Management</h1>
+            <h1 className="text-2xl font-bold mb-6">Words Management</h1>
 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -212,14 +211,9 @@ export default function CharactersPage() {
                                     ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
-                            {visibleColumns.character && (
+                            {visibleColumns.word && (
                                 <th onClick={() => handleSort('character')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    Char {sortField === 'character' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                            )}
-                            {visibleColumns.pinyin && (
-                                <th onClick={() => handleSort('pinyin')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    Pinyin {sortField === 'pinyin' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Word {sortField === 'character' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
                             {visibleColumns.meaning && (
@@ -232,9 +226,9 @@ export default function CharactersPage() {
                                     Example Sentences
                                 </th>
                             )}
-                            {visibleColumns.hsk_level && (
-                                <th onClick={() => handleSort('hsk_level')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    HSK {sortField === 'hsk_level' && (sortOrder === 'asc' ? '↑' : '↓')}
+                            {visibleColumns.topik_level && (
+                                <th onClick={() => handleSort('topik_level')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                    TOPIK {sortField === 'topik_level' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
                             {visibleColumns.freq_rank && (
@@ -263,8 +257,7 @@ export default function CharactersPage() {
                         ) : characters.map((char) => (
                             <tr key={char.id}>
                                 {visibleColumns.id && <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-mono">{String(char.id).substring(0, 8)}</td>}
-                                {visibleColumns.character && <td className="px-6 py-4 whitespace-nowrap text-lg font-bold">{char.character}</td>}
-                                {visibleColumns.pinyin && <td className="px-6 py-4 whitespace-nowrap">{char.pinyin}</td>}
+                                {visibleColumns.word && <td className="px-6 py-4 whitespace-nowrap text-lg font-bold">{char.character}</td>}
                                 {visibleColumns.meaning && (
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px]" title={char.meaning}>
                                         {char.meaning}
@@ -277,7 +270,6 @@ export default function CharactersPage() {
                                                 {char.example_sentences.slice(0, 2).map((sentence, idx) => (
                                                     <div key={idx} className="border-b last:border-0 pb-1 last:pb-0 border-gray-100">
                                                         <div className="font-semibold text-gray-800">{sentence.korean}</div>
-                                                        <div className="italic text-gray-600">{sentence.pinyin}</div>
                                                         <div className="text-gray-400">{sentence.english}</div>
                                                     </div>
                                                 ))}
@@ -290,7 +282,7 @@ export default function CharactersPage() {
                                         )}
                                     </td>
                                 )}
-                                {visibleColumns.hsk_level && <td className="px-6 py-4 whitespace-nowrap">{char.hsk_level}</td>}
+                                {visibleColumns.topik_level && <td className="px-6 py-4 whitespace-nowrap">{char.topik_level}</td>}
                                 {visibleColumns.freq_rank && <td className="px-6 py-4 whitespace-nowrap">{char.freq_rank}</td>}
                                 {visibleColumns.category && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.category}</td>}
                                 {visibleColumns.visible && (
@@ -319,7 +311,7 @@ export default function CharactersPage() {
                             </tr>
                         ))}
                         {!loading && characters.length === 0 && (
-                            <tr><td colSpan={10} className="px-6 py-4 text-center">No characters found.</td></tr>
+                            <tr><td colSpan={10} className="px-6 py-4 text-center">No words found.</td></tr>
                         )}
                     </tbody>
                 </table>

@@ -11,7 +11,7 @@ type ChartData = {
     total: number;
 };
 
-export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
+export default function TopikLevelChart({ filter }: { filter?: 'all' | 'true' | 'false' }) {
     const [data, setData] = useState<ChartData[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -19,7 +19,7 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
         const fetchData = async () => {
             setLoading(true);
             // Fetch ALL profiles with pagination
-            let allProfiles: { hsk_level: number | string | null; is_pro: boolean | null }[] = [];
+            let allProfiles: { topik_level: number | string | null; is_pro: boolean | null }[] = [];
             let page = 0;
             const pageSize = 1000;
             let hasMore = true;
@@ -30,7 +30,7 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
 
                 let query = supabase
                     .from('profiles')
-                    .select('hsk_level, is_pro')
+                    .select('topik_level, is_pro')
                     .eq('is_beta', false)
                     .range(from, to);
 
@@ -70,10 +70,10 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
             // Process data
             const levelCounts: Record<string, { pro: number; free: number }> = {};
 
-            profiles?.forEach((profile: { hsk_level: number | string | null; is_pro: boolean | null }) => {
-                const level = profile.hsk_level;
+            profiles?.forEach((profile: { topik_level: number | string | null; is_pro: boolean | null }) => {
+                const level = profile.topik_level;
                 if (level !== null && level !== undefined) {
-                    const key = `HSK ${level}`;
+                    const key = `TOPIK ${level}`;
                     if (!levelCounts[key]) {
                         levelCounts[key] = { pro: 0, free: 0 };
                     }
@@ -111,14 +111,14 @@ export default function HSKLevelChart({ filter }: { filter?: 'all' | 'true' | 'f
 
     if (data.length === 0) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">No HSK level data available</p>
+            <p className="text-gray-500 font-medium">No TOPIK level data available</p>
             <p className="text-sm text-gray-400 mt-1">User levels will appear here.</p>
         </div>
     );
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold mb-6 text-gray-900">User HSK Levels</h3>
+            <h3 className="text-lg font-bold mb-6 text-gray-900">User TOPIK Levels</h3>
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart

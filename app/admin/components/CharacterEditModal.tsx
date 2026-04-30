@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export type ExampleSentence = {
-    pinyin: string;
     korean: string;
     english: string;
 };
@@ -12,11 +11,10 @@ export type ExampleSentence = {
 export type Character = {
     id: string;
     character: string;
-    pinyin: string;
     meaning: string;
     example_sentences: ExampleSentence[];
     freq_rank: number;
-    hsk_level: number;
+    topik_level: number;
     category: string;
     visible: boolean;
 };
@@ -59,7 +57,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
     };
 
     const handleAddSentence = () => {
-        const newSentence: ExampleSentence = { korean: "", pinyin: "", english: "" };
+        const newSentence: ExampleSentence = { korean: "", english: "" };
         setEditingCharacter({
             ...editingCharacter,
             example_sentences: [...editingCharacter.example_sentences, newSentence],
@@ -79,12 +77,11 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
             const { error } = await supabase
                 .from("characters")
                 .update({
-                    pinyin: editingCharacter.pinyin,
                     meaning: editingCharacter.meaning,
                     character: editingCharacter.character,
                     example_sentences: editingCharacter.example_sentences,
                     freq_rank: editingCharacter.freq_rank,
-                    hsk_level: editingCharacter.hsk_level,
+                    topik_level: editingCharacter.topik_level,
                     category: editingCharacter.category,
                     visible: editingCharacter.visible,
                 })
@@ -94,7 +91,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
             onSave();
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Unknown error";
-            alert("Error updating character: " + message);
+            alert("Error updating word: " + message);
         } finally {
             setLoading(false);
         }
@@ -104,7 +101,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Edit Character</h2>
+                    <h2 className="text-2xl font-bold">Edit Word</h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -114,25 +111,14 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Character</label>
-                                <input
-                                    type="text"
-                                    value={editingCharacter.character}
-                                    onChange={(e) => setEditingCharacter({ ...editingCharacter, character: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Pinyin</label>
-                                <input
-                                    type="text"
-                                    value={editingCharacter.pinyin}
-                                    onChange={(e) => setEditingCharacter({ ...editingCharacter, pinyin: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Word</label>
+                            <input
+                                type="text"
+                                value={editingCharacter.character}
+                                onChange={(e) => setEditingCharacter({ ...editingCharacter, character: e.target.value })}
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                            />
                         </div>
 
                         <div>
@@ -147,11 +133,11 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">HSK</label>
+                                <label className="block text-sm font-medium text-gray-700">TOPIK</label>
                                 <input
                                     type="number"
-                                    value={editingCharacter.hsk_level}
-                                    onChange={(e) => setEditingCharacter({ ...editingCharacter, hsk_level: parseInt(e.target.value) })}
+                                    value={editingCharacter.topik_level}
+                                    onChange={(e) => setEditingCharacter({ ...editingCharacter, topik_level: parseInt(e.target.value) })}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                 />
                             </div>
@@ -238,27 +224,15 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                     placeholder="한국어..."
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Pinyin</label>
-                                                    <input
-                                                        type="text"
-                                                        value={sentence.pinyin}
-                                                        onChange={(e) => handleSentenceChange(index, "pinyin", e.target.value)}
-                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
-                                                        placeholder="Pinyin..."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-500 mb-1">English</label>
-                                                    <input
-                                                        type="text"
-                                                        value={sentence.english}
-                                                        onChange={(e) => handleSentenceChange(index, "english", e.target.value)}
-                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
-                                                        placeholder="Meaning..."
-                                                    />
-                                                </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">English</label>
+                                                <input
+                                                    type="text"
+                                                    value={sentence.english}
+                                                    onChange={(e) => handleSentenceChange(index, "english", e.target.value)}
+                                                    className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
+                                                    placeholder="Meaning..."
+                                                />
                                             </div>
                                         </div>
                                     </div>

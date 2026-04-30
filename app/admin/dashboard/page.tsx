@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import ReferralChart from "../components/ReferralChart";
 import UserGrowthChart from "../components/UserGrowthChart";
 import ReadingHoursChart from "../components/ReadingHoursChart";
-import HSKLevelChart from "../components/HSKLevelChart";
+import TopikLevelChart from "../components/TopikLevelChart";
 import ReasonChart from "../components/ReasonChart";
 import TimezoneChart from "../components/TimezoneChart";
 import CategoryChart from "../components/CategoryChart";
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
                     <ProUserPercentageChart dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
                 </div>
                 <ReadingHoursChart filter={filter} />
-                <HSKLevelChart filter={filter} />
+                <TopikLevelChart filter={filter} />
                 <ReasonChart filter={filter} />
                 <ReferralChart filter={filter} />
                 <CategoryChart filter={filter} />

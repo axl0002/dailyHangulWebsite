@@ -10,7 +10,6 @@ type CharacterReport = {
     user_id: string;
     character_id: string;
     character_content: string;
-    pinyin: string;
     meaning: string;
     issue_type: string;
 };
@@ -30,7 +29,7 @@ export default function CharacterReportsPage() {
     // Column Visibility
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
         user_id: false,
-        character: true,
+        word: true,
         details: true,
         issue_type: true,
         created_at: false,
@@ -104,12 +103,12 @@ export default function CharacterReportsPage() {
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Unknown error";
-            alert("Error fetching character details: " + message);
+            alert("Error fetching word details: " + message);
         }
     };
 
     const handleDeleteCharacter = async (characterId: string, characterContent: string) => {
-        if (!window.confirm(`Are you sure you want to delete the CHARACTER "${characterContent}"? \n\n⚠️ This will delete the character AND this report.\n⚠️ This action cannot be undone.`)) {
+        if (!window.confirm(`Are you sure you want to delete the WORD "${characterContent}"? \n\n⚠️ This will delete the word AND this report.\n⚠️ This action cannot be undone.`)) {
             return;
         }
 
@@ -122,7 +121,7 @@ export default function CharacterReportsPage() {
 
             if (error) throw error;
 
-            alert("Character and associated reports deleted successfully.");
+            alert("Word and associated reports deleted successfully.");
 
             // Remove reports associated with this character from the view
             setReports(prev => prev.filter(r => r.character_id !== characterId));
@@ -133,7 +132,7 @@ export default function CharacterReportsPage() {
     };
 
     const handleDeleteReport = async (reportId: string) => {
-        if (!window.confirm("Are you sure you want to delete ONLY this report? The character will remain unchanged.")) {
+        if (!window.confirm("Are you sure you want to delete ONLY this report? The word will remain unchanged.")) {
             return;
         }
 
@@ -168,7 +167,7 @@ export default function CharacterReportsPage() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6">Character Reports</h1>
+            <h1 className="text-2xl font-bold mb-6">Word Reports</h1>
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 {/* Column Toggles */}
@@ -198,14 +197,14 @@ export default function CharacterReportsPage() {
                                     User ID {sortField === 'user_id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
-                            {visibleColumns.character && (
+                            {visibleColumns.word && (
                                 <th onClick={() => handleSort('character_content')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    Character {sortField === 'character_content' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Word {sortField === 'character_content' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
                             {visibleColumns.details && (
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Details (Pinyin / Meaning)
+                                    Meaning
                                 </th>
                             )}
                             {visibleColumns.issue_type && (
@@ -233,7 +232,7 @@ export default function CharacterReportsPage() {
                                         {report.user_id || 'N/A'}
                                     </td>
                                 )}
-                                {visibleColumns.character && (
+                                {visibleColumns.word && (
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                             <span className="text-lg font-bold text-gray-900">{report.character_content}</span>
@@ -243,10 +242,7 @@ export default function CharacterReportsPage() {
                                 )}
                                 {visibleColumns.details && (
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[400px]">
-                                        <div className="space-y-1">
-                                            <div className="italic text-gray-800">{report.pinyin}</div>
-                                            <div className="text-gray-600">{report.meaning}</div>
-                                        </div>
+                                        <div className="text-gray-600">{report.meaning}</div>
                                     </td>
                                 )}
                                 {visibleColumns.issue_type && (
@@ -270,7 +266,7 @@ export default function CharacterReportsPage() {
                                                 onClick={() => handleEditClick(report.character_id)}
                                                 className="text-indigo-600 hover:text-indigo-900"
                                             >
-                                                Edit Character
+                                                Edit Word
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteReport(report.id)}
@@ -282,7 +278,7 @@ export default function CharacterReportsPage() {
                                                 onClick={() => handleDeleteCharacter(report.character_id, report.character_content)}
                                                 className="text-red-600 hover:text-red-900 font-semibold"
                                             >
-                                                Delete Char
+                                                Delete Word
                                             </button>
                                         </div>
                                     </td>

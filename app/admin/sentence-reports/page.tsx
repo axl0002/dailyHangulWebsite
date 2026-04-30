@@ -8,16 +8,14 @@ type SentenceReport = {
     id: string;
     created_at: string;
     user_id: string;
-    character_id: string;
+    character_id: number | null;
     character_content: string;
     sentence_korean: string;
-    sentence_pinyin: string;
-    sentence_english: string;
+    sentence_english: string | null;
     issue_type: string;
     characters: {
-        pinyin: string;
-        meaning: string;
-        category: string;
+        meaning: string | null;
+        category: string | null;
     } | null;
 };
 
@@ -36,7 +34,7 @@ export default function SentenceReportsPage() {
     // Column Visibility
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
         user_id: false,
-        character: true,
+        word: true,
         category: true,
         sentence: true,
         issue_type: true,
@@ -53,7 +51,7 @@ export default function SentenceReportsPage() {
         try {
             let query = supabase
                 .from("sentence_reports")
-                .select("*, characters(pinyin, meaning, category)");
+                .select("*, characters(meaning, category)");
 
             if (sortField) {
                 query = query.order(sortField, { ascending: sortOrder === 'asc' });
@@ -67,7 +65,13 @@ export default function SentenceReportsPage() {
 
             setReports(data || []);
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Unknown error";
+            console.error("sentence_reports fetch failed:", err);
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : typeof err === "object" && err !== null
+                        ? JSON.stringify(err, null, 2)
+                        : String(err);
             setError(message);
         } finally {
             setLoading(false);
@@ -91,7 +95,7 @@ export default function SentenceReportsPage() {
         setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const handleEditClick = async (characterId: string) => {
+    const handleEditClick = async (characterId: number) => {
         try {
             const { data, error } = await supabase
                 .from("characters")
@@ -111,12 +115,12 @@ export default function SentenceReportsPage() {
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Unknown error";
-            alert("Error fetching character details: " + message);
+            alert("Error fetching word details: " + message);
         }
     };
 
-    const handleDeleteCharacter = async (characterId: string, characterContent: string) => {
-        if (!window.confirm(`Are you sure you want to delete the CHARACTER "${characterContent}"? \n\n⚠️ This will delete the character AND this report.\n⚠️ This action cannot be undone.`)) {
+    const handleDeleteCharacter = async (characterId: number, characterContent: string) => {
+        if (!window.confirm(`Are you sure you want to delete the WORD "${characterContent}"? \n\n⚠️ This will delete the word AND this report.\n⚠️ This action cannot be undone.`)) {
             return;
         }
 
@@ -129,7 +133,7 @@ export default function SentenceReportsPage() {
 
             if (error) throw error;
 
-            alert("Character and associated reports deleted successfully.");
+            alert("Word and associated reports deleted successfully.");
 
             // Remove reports associated with this character from the view
             setReports(prev => prev.filter(r => r.character_id !== characterId));
@@ -140,7 +144,7 @@ export default function SentenceReportsPage() {
     };
 
     const handleDeleteReport = async (reportId: string) => {
-        if (!window.confirm("Are you sure you want to delete ONLY this report? The character will remain unchanged.")) {
+        if (!window.confirm("Are you sure you want to delete ONLY this report? The word will remain unchanged.")) {
             return;
         }
 
@@ -211,9 +215,9 @@ export default function SentenceReportsPage() {
                                     User ID {sortField === 'user_id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
-                            {visibleColumns.character && (
+                            {visibleColumns.word && (
                                 <th onClick={() => handleSort('character_content')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                                    Character {sortField === 'character_content' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Word {sortField === 'character_content' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
                             {visibleColumns.category && (
@@ -251,17 +255,14 @@ export default function SentenceReportsPage() {
                                         {report.user_id || 'N/A'}
                                     </td>
                                 )}
-                                {visibleColumns.character && (
+                                {visibleColumns.word && (
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                             <span className="text-lg font-bold text-gray-900">{report.character_content}</span>
-                                            {report.characters && (
-                                                <>
-                                                    <span className="text-sm text-gray-600">{report.characters.pinyin}</span>
-                                                    <span className="text-xs text-gray-500 max-w-[150px] truncate" title={report.characters.meaning}>
-                                                        {report.characters.meaning}
-                                                    </span>
-                                                </>
+                                            {report.characters?.meaning && (
+                                                <span className="text-xs text-gray-500 max-w-[150px] truncate" title={report.characters.meaning}>
+                                                    {report.characters.meaning}
+                                                </span>
                                             )}
                                             <span className="text-xs text-gray-400 font-mono mt-1">ID: {report.character_id}</span>
                                         </div>
@@ -280,7 +281,6 @@ export default function SentenceReportsPage() {
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[400px]">
                                         <div className="space-y-1">
                                             <div className="font-semibold text-gray-800">{report.sentence_korean}</div>
-                                            <div className="italic text-gray-600">{report.sentence_pinyin}</div>
                                             <div className="text-gray-500">{report.sentence_english}</div>
                                         </div>
                                     </td>
@@ -302,24 +302,28 @@ export default function SentenceReportsPage() {
                                 {visibleColumns.actions && (
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex flex-col gap-2 items-end">
-                                            <button
-                                                onClick={() => handleEditClick(report.character_id)}
-                                                className="text-indigo-600 hover:text-indigo-900"
-                                            >
-                                                Edit Character
-                                            </button>
+                                            {report.character_id !== null && (
+                                                <button
+                                                    onClick={() => handleEditClick(report.character_id!)}
+                                                    className="text-indigo-600 hover:text-indigo-900"
+                                                >
+                                                    Edit Word
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleDeleteReport(report.id)}
                                                 className="text-gray-600 hover:text-gray-900"
                                             >
                                                 Delete Report
                                             </button>
-                                            <button
-                                                onClick={() => handleDeleteCharacter(report.character_id, report.character_content)}
-                                                className="text-red-600 hover:text-red-900 font-semibold"
-                                            >
-                                                Delete Char
-                                            </button>
+                                            {report.character_id !== null && (
+                                                <button
+                                                    onClick={() => handleDeleteCharacter(report.character_id!, report.character_content)}
+                                                    className="text-red-600 hover:text-red-900 font-semibold"
+                                                >
+                                                    Delete Word
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 )}
