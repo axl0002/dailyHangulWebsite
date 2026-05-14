@@ -92,6 +92,23 @@ export default function Home() {
                   <span className="text-xl font-bold tracking-wide">App Store</span>
                 </div>
               </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=uk.co.joywise.dailyhangul"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <svg viewBox="0 0 512 512" className="w-7 h-7">
+                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z" fill="#00D2FF" />
+                  <path d="M47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0z" fill="#00F076" />
+                  <path d="M472.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8z" fill="#FFDA00" />
+                  <path d="M104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="#FF3A44" />
+                </svg>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-xs font-medium opacity-80 mb-0.5">Get it on</span>
+                  <span className="text-xl font-bold tracking-wide">Google Play</span>
+                </div>
+              </a>
             </div>
 
             {/* Feature Badges */}
