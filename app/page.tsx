@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Script from "next/script";
 
 export default function Home() {
   return (
@@ -78,9 +77,9 @@ export default function Home() {
             </div>
 
             {/* Store Buttons */}
-            {/* <div className="w-full pt-2 flex justify-center gap-3 flex-wrap">
+            <div className="w-full pt-2 flex justify-center lg:justify-start gap-3 flex-wrap">
               <a
-                href="https://apps.apple.com/us/app/daily-hangul/id6756919959"
+                href="https://apps.apple.com/az/app/daily-hangul/id6767769904"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
@@ -93,48 +92,6 @@ export default function Home() {
                   <span className="text-xl font-bold tracking-wide">App Store</span>
                 </div>
               </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.alexliu.dailyhangul"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 px-6 py-3 text-white bg-black rounded-xl hover:bg-black/80 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <svg viewBox="0 0 512 512" className="w-7 h-7">
-                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z" fill="#00D2FF" />
-                  <path d="M47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0z" fill="#00F076" />
-                  <path d="M472.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8z" fill="#FFDA00" />
-                  <path d="M104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="#FF3A44" />
-                </svg>
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-xs font-medium opacity-80 mb-0.5">Get it on</span>
-                  <span className="text-xl font-bold tracking-wide">Google Play</span>
-                </div>
-              </a>
-            </div> */}
-
-            {/* Waitlist Form */}
-            <div className="w-full pt-2 flex flex-col items-center">
-              <iframe
-                src="https://subscribe-forms.beehiiv.com/52117acb-b1f7-4ccb-a133-f9caad60fff1"
-                className="beehiiv-embed"
-                data-test-id="beehiiv-embed"
-                frameBorder="0"
-                style={{
-                  margin: 0,
-                  borderRadius: "0px",
-                  backgroundColor: "transparent",
-                  width: "400px",
-                  maxWidth: "100%",
-                  boxShadow: "0 0 #0000",
-                }}
-              />
-              <Script
-                src="https://subscribe-forms.beehiiv.com/embed.js"
-                strategy="afterInteractive"
-              />
-              <p className="text-xs text-foreground/50 mt-1 text-center max-w-[560px]">
-                By joining, you agree to receive updates from us.
-              </p>
             </div>
 
             {/* Feature Badges */}
@@ -144,21 +101,9 @@ export default function Home() {
           </div>
 
           {/* Right Column: App Preview */}
-          <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none flex items-center justify-center">
-            <div className="relative w-[55%] aspect-[9/19.5]">
-              <Image
-                src="/app-preview.png"
-                alt="App Preview"
-                fill
-                className="object-cover rounded-[2.5rem] shadow-2xl border-4 border-gray-900/10 bg-white"
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Original dual-phone preview (restore later) */}
-          {/* <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none">
+          <div className="relative w-full aspect-square max-w-[500px] mx-auto lg:max-w-none">
             <div className="relative w-full h-full flex items-center justify-center">
+              {/* Main Phone */}
               <div className="relative w-[55%] aspect-[9/19.5] z-10 transform -rotate-2 -translate-x-16 lg:-translate-x-32">
                 <Image
                   src="/app-preview.png"
@@ -168,6 +113,7 @@ export default function Home() {
                   priority
                 />
               </div>
+              {/* Secondary Phone (Floating Right) */}
               <div className="absolute w-[50%] aspect-[9/19.5] z-0 transform translate-x-16 lg:translate-x-32 translate-y-12 rotate-6 opacity-100">
                 <Image
                   src="/app-preview-2.png"
@@ -178,7 +124,7 @@ export default function Home() {
                 />
               </div>
             </div>
-          </div> */}
+          </div>
         </div>
 
         {/* Reviews Section */}

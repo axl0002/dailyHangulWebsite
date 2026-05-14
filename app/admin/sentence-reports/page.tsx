@@ -15,6 +15,7 @@ type SentenceReport = {
     issue_type: string;
     characters: {
         meaning: string | null;
+        romanization: string | null;
         category: string | null;
     } | null;
 };
@@ -51,7 +52,7 @@ export default function SentenceReportsPage() {
         try {
             let query = supabase
                 .from("sentence_reports")
-                .select("*, characters(meaning, category)");
+                .select("*, characters(meaning, romanization, category)");
 
             if (sortField) {
                 query = query.order(sortField, { ascending: sortOrder === 'asc' });
@@ -254,6 +255,11 @@ export default function SentenceReportsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                             <span className="text-lg font-bold text-gray-900">{report.character_content}</span>
+                                            {report.characters?.romanization && (
+                                                <span className="text-xs italic text-gray-600">
+                                                    {report.characters.romanization}
+                                                </span>
+                                            )}
                                             {report.characters?.meaning && (
                                                 <span className="text-xs text-gray-500 max-w-[150px] truncate" title={report.characters.meaning}>
                                                     {report.characters.meaning}

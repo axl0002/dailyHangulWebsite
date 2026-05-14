@@ -30,6 +30,7 @@ export default function CharactersPage() {
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
         id: true,
         word: true,
+        romanization: true,
         meaning: true,
         example_sentences: true,
         topik_level: true,
@@ -48,7 +49,7 @@ export default function CharactersPage() {
         try {
             let query = supabase
                 .from("characters")
-                .select("*, example_sentences(id, korean, english)", { count: 'exact' });
+                .select("*, example_sentences(id, korean, romanization, english)", { count: 'exact' });
 
             if (searchTerm) {
                 query = query.ilike('character', `%${searchTerm}%`);
@@ -215,6 +216,11 @@ export default function CharactersPage() {
                                     Word {sortField === 'character' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
+                            {visibleColumns.romanization && (
+                                <th onClick={() => handleSort('romanization')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                                    Romanization {sortField === 'romanization' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
+                            )}
                             {visibleColumns.meaning && (
                                 <th onClick={() => handleSort('meaning')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     Meaning {sortField === 'meaning' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -257,6 +263,7 @@ export default function CharactersPage() {
                             <tr key={char.id}>
                                 {visibleColumns.id && <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-mono">{String(char.id).substring(0, 8)}</td>}
                                 {visibleColumns.word && <td className="px-6 py-4 whitespace-nowrap text-lg font-bold">{char.character}</td>}
+                                {visibleColumns.romanization && <td className="px-6 py-4 whitespace-nowrap text-sm italic text-gray-600">{char.romanization}</td>}
                                 {visibleColumns.meaning && (
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px]" title={char.meaning}>
                                         {char.meaning}
@@ -269,6 +276,9 @@ export default function CharactersPage() {
                                                 {char.example_sentences.slice(0, 2).map((sentence, idx) => (
                                                     <div key={idx} className="border-b last:border-0 pb-1 last:pb-0 border-gray-100">
                                                         <div className="font-semibold text-gray-800">{sentence.korean}</div>
+                                                        {sentence.romanization && (
+                                                            <div className="italic text-gray-500">{sentence.romanization}</div>
+                                                        )}
                                                         <div className="text-gray-400">{sentence.english}</div>
                                                     </div>
                                                 ))}
