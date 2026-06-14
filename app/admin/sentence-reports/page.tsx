@@ -49,6 +49,7 @@ export default function SentenceReportsPage() {
 
     // Audio playback
     const [audioByKorean, setAudioByKorean] = useState<Record<string, string | null>>({});
+    const [romanizationByKorean, setRomanizationByKorean] = useState<Record<string, string | null>>({});
     const [playingReportId, setPlayingReportId] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -83,18 +84,24 @@ export default function SentenceReportsPage() {
             if (uniqueKorean.length > 0) {
                 const { data: sentenceData, error: sentenceError } = await supabase
                     .from("example_sentences")
-                    .select("korean, audio_url")
+                    .select("korean, romanization, audio_url")
                     .in("korean", uniqueKorean);
 
                 if (sentenceError) throw sentenceError;
 
-                const map: Record<string, string | null> = {};
+                const audioMap: Record<string, string | null> = {};
+                const romanMap: Record<string, string | null> = {};
                 for (const s of sentenceData || []) {
-                    if (s.korean) map[s.korean] = s.audio_url ?? null;
+                    if (s.korean) {
+                        audioMap[s.korean] = s.audio_url ?? null;
+                        romanMap[s.korean] = s.romanization ?? null;
+                    }
                 }
-                setAudioByKorean(map);
+                setAudioByKorean(audioMap);
+                setRomanizationByKorean(romanMap);
             } else {
                 setAudioByKorean({});
+                setRomanizationByKorean({});
             }
         } catch (err: unknown) {
             console.error("sentence_reports fetch failed:", err);
@@ -367,6 +374,9 @@ export default function SentenceReportsPage() {
                                                     );
                                                 })()}
                                             </div>
+                                            {romanizationByKorean[report.sentence_korean] && (
+                                                <div className="italic text-gray-600">{romanizationByKorean[report.sentence_korean]}</div>
+                                            )}
                                             <div className="text-gray-500">{report.sentence_english}</div>
                                         </div>
                                     </td>
