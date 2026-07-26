@@ -53,3 +53,8 @@ create policy staff_all_example_sentences on public.example_sentences
 drop policy if exists staff_select_categories on public.categories;
 create policy staff_select_categories on public.categories
   for select to authenticated using (public.is_staff());
+
+-- Trial cancellation charts on the admin dashboard read RevenueCat events.
+drop policy if exists staff_select_subscription_events on public.subscription_events;
+create policy staff_select_subscription_events on public.subscription_events
+  for select to authenticated using (public.is_staff());
