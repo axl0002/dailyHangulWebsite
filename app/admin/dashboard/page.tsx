@@ -18,6 +18,8 @@ import ReferralByDayChart from "../components/ReferralByDayChart";
 import PlatformByDayChart from "../components/PlatformByDayChart";
 import PlatformChart from "../components/PlatformChart";
 import TimezoneByDayChart from "../components/TimezoneByDayChart";
+import TrialCancellationChart from "../components/TrialCancellationChart";
+import TrialCancellationRateOverTimeChart from "../components/TrialCancellationRateOverTimeChart";
 import { useDateLabels } from "../components/useDateLabels";
 
 export default function AdminDashboard() {
@@ -110,6 +112,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="col-span-1 md:col-span-2">
                     <HourlyGrowthChart filter={filter} />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                    <TrialCancellationRateOverTimeChart dateLabels={labels} onAddLabel={addLabel} onDeleteLabel={deleteLabel} />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                    <TrialCancellationChart />
                 </div>
                 <ReadingHoursChart filter={filter} />
                 <TopikLevelChart filter={filter} />
