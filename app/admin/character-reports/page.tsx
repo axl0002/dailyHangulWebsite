@@ -15,6 +15,9 @@ type CharacterReport = {
     character_content: string;
     meaning: string;
     issue_type: string;
+    characters: {
+        romanization: string | null;
+    } | null;
 };
 
 type SortField = keyof CharacterReport;
@@ -88,7 +91,7 @@ export default function CharacterReportsPage() {
         try {
             let query = supabase
                 .from("character_reports")
-                .select("*");
+                .select("*, characters(romanization)");
 
             if (sortField) {
                 query = query.order(sortField, { ascending: sortOrder === 'asc' });
@@ -268,7 +271,7 @@ export default function CharacterReportsPage() {
                             )}
                             {visibleColumns.details && (
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Meaning
+                                    Details (Romanization / Meaning)
                                 </th>
                             )}
                             {visibleColumns.issue_type && (
@@ -333,7 +336,12 @@ export default function CharacterReportsPage() {
                                 )}
                                 {visibleColumns.details && (
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[400px]">
-                                        <div className="text-gray-600">{report.meaning}</div>
+                                        <div className="space-y-1">
+                                            {report.characters?.romanization && (
+                                                <div className="italic text-gray-800">{report.characters.romanization}</div>
+                                            )}
+                                            <div className="text-gray-600">{report.meaning}</div>
+                                        </div>
                                     </td>
                                 )}
                                 {visibleColumns.issue_type && (
