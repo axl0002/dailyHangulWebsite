@@ -58,3 +58,14 @@ create policy staff_select_categories on public.categories
 drop policy if exists staff_select_subscription_events on public.subscription_events;
 create policy staff_select_subscription_events on public.subscription_events
   for select to authenticated using (public.is_staff());
+
+-- Feedback: staff read user feedback on /admin/feedback.
+drop policy if exists staff_select_feedback on public.feedback;
+create policy staff_select_feedback on public.feedback
+  for select to authenticated using (public.is_staff());
+
+-- Paragraphs: staff read draft/rejected daily paragraphs on /admin/paragraphs
+-- (the "read live" policy only exposes paragraphs currently in use).
+drop policy if exists staff_select_daily_paragraphs on public.daily_paragraphs;
+create policy staff_select_daily_paragraphs on public.daily_paragraphs
+  for select to authenticated using (public.is_staff());
