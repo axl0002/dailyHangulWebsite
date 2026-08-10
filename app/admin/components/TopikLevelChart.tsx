@@ -32,6 +32,7 @@ export default function TopikLevelChart({ filter }: { filter?: 'all' | 'true' | 
                     .from('profiles')
                     .select('topik_level, is_pro')
                     .eq('is_beta', false)
+                    .order('id', { ascending: true })
                     .range(from, to);
 
                 if (filter === 'true') {

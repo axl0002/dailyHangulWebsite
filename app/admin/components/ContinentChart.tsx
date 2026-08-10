@@ -53,6 +53,7 @@ export default function ContinentChart({ filter }: { filter?: 'all' | 'true' | '
                     .from('profiles')
                     .select('timezone, is_pro')
                     .eq('is_beta', false)
+                    .order('id', { ascending: true })
                     .range(from, to);
 
                 if (filter === 'true') {
