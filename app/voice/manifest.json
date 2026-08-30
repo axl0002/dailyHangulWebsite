@@ -1,0 +1,112 @@
+{
+  "app": "dailyHangul",
+  "language": "Korean",
+  "languageCode": "ko-KR",
+  "base": "https://cdn.dailyhangul.app/voice-test",
+  "speeds": [
+    {
+      "id": "slow",
+      "rate": 0.75
+    },
+    {
+      "id": "normal",
+      "rate": 0.9
+    },
+    {
+      "id": "fast",
+      "rate": 1.0
+    }
+  ],
+  "voices": [
+    {
+      "id": "ko-KR-Chirp3-HD-Aoede",
+      "gender": "F",
+      "family": "Chirp3-HD",
+      "label": "A"
+    },
+    {
+      "id": "ko-KR-Chirp3-HD-Leda",
+      "gender": "F",
+      "family": "Chirp3-HD",
+      "label": "B"
+    },
+    {
+      "id": "ko-KR-Chirp3-HD-Kore",
+      "gender": "F",
+      "family": "Chirp3-HD",
+      "label": "C"
+    },
+    {
+      "id": "ko-KR-Chirp3-HD-Charon",
+      "gender": "M",
+      "family": "Chirp3-HD",
+      "label": "D"
+    },
+    {
+      "id": "ko-KR-Chirp3-HD-Puck",
+      "gender": "M",
+      "family": "Chirp3-HD",
+      "label": "E"
+    },
+    {
+      "id": "ko-KR-Neural2-A",
+      "gender": "F",
+      "family": "Neural2",
+      "label": "F"
+    }
+  ],
+  "items": [
+    {
+      "id": "w1",
+      "type": "word",
+      "text": "그",
+      "romanization": "geu",
+      "english": "that"
+    },
+    {
+      "id": "w2",
+      "type": "word",
+      "text": "사람",
+      "romanization": "saram",
+      "english": "person"
+    },
+    {
+      "id": "w3",
+      "type": "word",
+      "text": "것",
+      "romanization": "geot",
+      "english": "thing"
+    },
+    {
+      "id": "w4",
+      "type": "word",
+      "text": "생각",
+      "romanization": "saenggak",
+      "english": "thought"
+    },
+    {
+      "id": "s1",
+      "type": "sentence",
+      "text": "저는 오늘 한국어를 공부해요.",
+      "romanization": "Jeoneun oneul hangugeoreul gongbuhaeyo.",
+      "english": "I am studying Korean today."
+    },
+    {
+      "id": "s2",
+      "type": "sentence",
+      "text": "오늘 날씨가 좋아서 공원에 산책하러 가고 싶어요.",
+      "romanization": "Oneul nalssiga joaseo gongwone sanchaekhareo gago sipeoyo.",
+      "english": "The weather is nice today, so I want to go to the park for a walk."
+    },
+    {
+      "id": "s3",
+      "type": "sentence",
+      "text": "언어를 배우는 것은 하루아침에 되는 일이 아니라 꾸준한 노력의 결과입니다.",
+      "romanization": "Eoneoreul baeuneun geoseun haruachime doeneun iri anira kkujunhan noryeogui gyeolgwaimnida.",
+      "english": "Learning a language does not happen overnight; it is the result of steady effort."
+    }
+  ],
+  "currentVoice": "ko-KR-Chirp3-HD-Kore",
+  "generated": "2026-08-30",
+  "version": 2
+}
