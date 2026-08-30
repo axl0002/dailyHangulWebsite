@@ -53,6 +53,42 @@
       "gender": "F",
       "family": "Neural2",
       "label": "F"
+    },
+    {
+      "id": "ko-KR-Neural2-B",
+      "gender": "F",
+      "family": "Neural2",
+      "label": "G"
+    },
+    {
+      "id": "ko-KR-Neural2-C",
+      "gender": "M",
+      "family": "Neural2",
+      "label": "H"
+    },
+    {
+      "id": "ko-KR-Wavenet-A",
+      "gender": "F",
+      "family": "Wavenet",
+      "label": "I"
+    },
+    {
+      "id": "ko-KR-Wavenet-B",
+      "gender": "F",
+      "family": "Wavenet",
+      "label": "J"
+    },
+    {
+      "id": "ko-KR-Wavenet-C",
+      "gender": "M",
+      "family": "Wavenet",
+      "label": "K"
+    },
+    {
+      "id": "ko-KR-Wavenet-D",
+      "gender": "M",
+      "family": "Wavenet",
+      "label": "L"
     }
   ],
   "items": [
@@ -106,7 +142,47 @@
       "english": "Learning a language does not happen overnight; it is the result of steady effort."
     }
   ],
+  "sections": [
+    {
+      "id": "words",
+      "title": "Words",
+      "voices": [
+        "ko-KR-Chirp3-HD-Leda",
+        "ko-KR-Chirp3-HD-Kore",
+        "ko-KR-Neural2-A",
+        "ko-KR-Neural2-B",
+        "ko-KR-Neural2-C",
+        "ko-KR-Wavenet-A",
+        "ko-KR-Wavenet-B",
+        "ko-KR-Wavenet-C",
+        "ko-KR-Wavenet-D"
+      ],
+      "items": [
+        "w1",
+        "w2",
+        "w3",
+        "w4"
+      ]
+    },
+    {
+      "id": "sentences",
+      "title": "Sentences",
+      "voices": [
+        "ko-KR-Chirp3-HD-Aoede",
+        "ko-KR-Chirp3-HD-Leda",
+        "ko-KR-Chirp3-HD-Kore",
+        "ko-KR-Chirp3-HD-Charon",
+        "ko-KR-Chirp3-HD-Puck",
+        "ko-KR-Neural2-A"
+      ],
+      "items": [
+        "s1",
+        "s2",
+        "s3"
+      ]
+    }
+  ],
   "currentVoice": "ko-KR-Chirp3-HD-Kore",
   "generated": "2026-08-30",
-  "version": 2
+  "version": 3
 }
