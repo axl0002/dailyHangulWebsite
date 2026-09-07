@@ -4,8 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CharacterEditModal, { Character, ExampleSentence } from "../components/CharacterEditModal";
 
+type Proposal = {
+    seed_level: number;
+    ai_level: number | null;
+    ai_note: string | null;
+    final_level: number;
+};
+
 type CharacterRow = Character & {
     example_sentences?: ExampleSentence[];
+    // One-to-one embed (level_proposals PK = character_id). Null until the
+    // level-6 curation table is seeded.
+    level_proposals?: Proposal | null;
 };
 
 type SortField = keyof Character | null;
@@ -41,6 +51,7 @@ export default function CharactersPage() {
         meaning: true,
         example_sentences: true,
         topik_level: true,
+        proposed_level: true, // level-6 re-cut curation (level_proposals.final_level)
         freq_rank: false, // Default hidden
         category: true,
         visible: true,
@@ -51,12 +62,18 @@ export default function CharactersPage() {
     const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
     const [showModal, setShowModal] = useState(false);
 
+    // Who is editing proposed levels (stored in level_proposals.updated_by)
+    const [reviewerEmail, setReviewerEmail] = useState<string | null>(null);
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data }) => setReviewerEmail(data.user?.email ?? null));
+    }, []);
+
     const fetchCharacters = useCallback(async () => {
         setLoading(true);
         try {
             let query = supabase
                 .from("characters")
-                .select("*, example_sentences(id, korean, romanization, english)", { count: 'exact' });
+                .select("*, example_sentences(id, korean, romanization, english), level_proposals(seed_level, ai_level, ai_note, final_level)", { count: 'exact' });
 
             if (searchTerm) {
                 query = query.ilike('character', `%${searchTerm}%`);
@@ -177,6 +194,23 @@ export default function CharactersPage() {
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Unknown error";
             alert("Error updating visibility: " + message);
+        }
+    };
+
+    const handleProposedLevelChange = async (char: CharacterRow, newLevel: number) => {
+        const prev = char.level_proposals;
+        if (!prev || prev.final_level === newLevel) return;
+        // Optimistic update; revert on failure.
+        setCharacters(cs => cs.map(c => c.id === char.id && c.level_proposals
+            ? { ...c, level_proposals: { ...c.level_proposals, final_level: newLevel } } : c));
+        const { error } = await supabase
+            .from("level_proposals")
+            .update({ final_level: newLevel, updated_by: reviewerEmail, updated_at: new Date().toISOString() })
+            .eq("character_id", char.id);
+        if (error) {
+            setCharacters(cs => cs.map(c => c.id === char.id
+                ? { ...c, level_proposals: prev } : c));
+            alert("Couldn't save proposed level: " + error.message);
         }
     };
 
@@ -342,6 +376,11 @@ export default function CharactersPage() {
                                     TOPIK {sortField === 'topik_level' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                             )}
+                            {visibleColumns.proposed_level && (
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" title="Level-6 re-cut proposal — editable; applied to the app at cutover">
+                                    Proposed L6
+                                </th>
+                            )}
                             {visibleColumns.freq_rank && (
                                 <th onClick={() => handleSort('freq_rank')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                                     Freq {sortField === 'freq_rank' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -398,6 +437,31 @@ export default function CharactersPage() {
                                     </td>
                                 )}
                                 {visibleColumns.topik_level && <td className="px-6 py-4 whitespace-nowrap">{char.topik_level}</td>}
+                                {visibleColumns.proposed_level && (
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {char.level_proposals ? (
+                                            <div>
+                                                <select
+                                                    value={char.level_proposals.final_level}
+                                                    onChange={(e) => handleProposedLevelChange(char, parseInt(e.target.value, 10))}
+                                                    className="border rounded px-2 py-1 text-sm bg-white"
+                                                >
+                                                    {[1, 2, 3, 4, 5, 6].map(l => <option key={l} value={l}>{l}</option>)}
+                                                </select>
+                                                {char.level_proposals.final_level !== char.level_proposals.seed_level && (
+                                                    <div className="text-[10px] text-gray-400 mt-0.5">seed {char.level_proposals.seed_level}</div>
+                                                )}
+                                                {char.level_proposals.ai_level != null && char.level_proposals.ai_level !== char.level_proposals.final_level && (
+                                                    <div className="text-[10px] text-amber-600 mt-0.5 max-w-[140px]" title={char.level_proposals.ai_note ?? undefined}>
+                                                        AI: {char.level_proposals.ai_level}{char.level_proposals.ai_note ? ' — ' + char.level_proposals.ai_note : ''}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-300">—</span>
+                                        )}
+                                    </td>
+                                )}
                                 {visibleColumns.freq_rank && <td className="px-6 py-4 whitespace-nowrap">{char.freq_rank}</td>}
                                 {visibleColumns.category && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.category}</td>}
                                 {visibleColumns.visible && (
