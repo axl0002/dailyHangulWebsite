@@ -36,6 +36,7 @@ export default function CharactersPage() {
     const [categoryFilter, setCategoryFilter] = useState<string>("");
     const [levelFilter, setLevelFilter] = useState<string>("");
     const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+    const [proposedFilter, setProposedFilter] = useState<string>("");
     const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
     const [levelOptions, setLevelOptions] = useState<string[]>([]);
 
@@ -73,7 +74,13 @@ export default function CharactersPage() {
         try {
             let query = supabase
                 .from("characters")
-                .select("*, example_sentences(id, korean, romanization, english), level_proposals(seed_level, ai_level, ai_note, final_level)", { count: 'exact' });
+                // Filtering by proposed level needs an inner join so rows without
+                // a proposal drop out; otherwise keep the join optional.
+                .select(`*, example_sentences(id, korean, romanization, english), level_proposals${proposedFilter ? '!inner' : ''}(seed_level, ai_level, ai_note, final_level)`, { count: 'exact' });
+
+            if (proposedFilter) {
+                query = query.eq('level_proposals.final_level', proposedFilter);
+            }
 
             if (searchTerm) {
                 query = query.ilike('character', `%${searchTerm}%`);
@@ -112,7 +119,7 @@ export default function CharactersPage() {
         } finally {
             setLoading(false);
         }
-    }, [searchTerm, categoryFilter, levelFilter, visibilityFilter, sortField, sortOrder, currentPage, itemsPerPage]);
+    }, [searchTerm, categoryFilter, levelFilter, visibilityFilter, proposedFilter, sortField, sortOrder, currentPage, itemsPerPage]);
 
     useEffect(() => {
         fetchCharacters();
@@ -323,6 +330,16 @@ export default function CharactersPage() {
                     ))}
                 </select>
                 <select
+                    value={proposedFilter}
+                    onChange={(e) => { setProposedFilter(e.target.value); setCurrentPage(1); }}
+                    className="border p-2 rounded text-sm bg-white"
+                >
+                    <option value="">All proposed L6</option>
+                    {[1, 2, 3, 4, 5, 6].map(l => (
+                        <option key={l} value={l}>Proposed {l}</option>
+                    ))}
+                </select>
+                <select
                     value={visibilityFilter}
                     onChange={(e) => { setVisibilityFilter(e.target.value as 'all' | 'visible' | 'hidden'); setCurrentPage(1); }}
                     className="border p-2 rounded text-sm bg-white"
@@ -331,9 +348,9 @@ export default function CharactersPage() {
                     <option value="visible">Visible only</option>
                     <option value="hidden">Hidden only</option>
                 </select>
-                {(categoryFilter || levelFilter || visibilityFilter !== 'all') && (
+                {(categoryFilter || levelFilter || proposedFilter || visibilityFilter !== 'all') && (
                     <button
-                        onClick={() => { setCategoryFilter(""); setLevelFilter(""); setVisibilityFilter('all'); setCurrentPage(1); }}
+                        onClick={() => { setCategoryFilter(""); setLevelFilter(""); setProposedFilter(""); setVisibilityFilter('all'); setCurrentPage(1); }}
                         className="text-xs text-gray-500 hover:text-gray-800 underline"
                     >
                         Clear
