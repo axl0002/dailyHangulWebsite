@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import CharacterEditModal, { Character } from "../components/CharacterEditModal";
 
 const WORD_AUDIO_URL = (characterId: string) =>
-    `https://pub-bfdadfb86df2453c884f94e343b76912.r2.dev/character/char_${characterId}.mp3`;
+    `https://cdn.dailyhangul.app/character/char_${characterId}.mp3`;
 
 type CharacterReport = {
     id: string;
