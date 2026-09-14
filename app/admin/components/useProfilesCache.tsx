@@ -29,15 +29,15 @@ export type CachedProfile = {
     reading_hours: string | null;
     timezone: string | null;
     theme: string | null;
-    use_traditional: boolean | null;
     daily_sentence_count: number | null;
     show_romanization: boolean | null;
+    sentence_formalities: string[] | null;
 };
 
 const PROFILE_SELECT =
     'id, is_pro, created_at, platform, topik_level, survey_responses, ' +
-    'selected_categories, reading_hours, timezone, theme, use_traditional, ' +
-    'daily_sentence_count, show_romanization';
+    'selected_categories, reading_hours, timezone, theme, ' +
+    'daily_sentence_count, show_romanization, sentence_formalities';
 
 type Ctx = {
     profiles: CachedProfile[] | null;

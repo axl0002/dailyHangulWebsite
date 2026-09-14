@@ -10,10 +10,10 @@ import CountryChart from './CountryChart';
 import TimezoneChart from './TimezoneChart';
 import PlatformChart from './PlatformChart';
 import ThemeChart from './ThemeChart';
-import TraditionalSimplifiedChart from './TraditionalSimplifiedChart';
 
 import DailySentenceCountChart from './DailySentenceCountChart';
 import RomanizationEnabledChart from './RomanizationEnabledChart';
+import FormalityChart from './FormalityChart';
 import SentencesReadChart from './SentencesReadChart';
 import StoriesReadChart from './StoriesReadChart';
 import SavedCharactersChart from './SavedCharactersChart';
@@ -50,7 +50,6 @@ export default function AnalyticsGrid({ filter, dateRange }: { filter: ProFilter
             <PlatformChart filter={filter} dateRange={dateRange} />
             <TopikLevelChart filter={filter} dateRange={dateRange} />
             <ThemeChart filter={filter} dateRange={dateRange} />
-            <TraditionalSimplifiedChart filter={filter} dateRange={dateRange} />
             <ReadingHoursChart filter={filter} dateRange={dateRange} />
             <ReasonChart filter={filter} dateRange={dateRange} />
             <ReferralChart filter={filter} dateRange={dateRange} />
@@ -69,6 +68,7 @@ export default function AnalyticsGrid({ filter, dateRange }: { filter: ProFilter
 
             <DailySentenceCountChart filter={filter} dateRange={dateRange} />
             <RomanizationEnabledChart filter={filter} dateRange={dateRange} />
+            <FormalityChart filter={filter} dateRange={dateRange} />
             <SentencesReadChart filter={filter} dateRange={dateRange} />
             <StoriesReadChart filter={filter} dateRange={dateRange} />
             <SavedCharactersChart filter={filter} dateRange={dateRange} />
