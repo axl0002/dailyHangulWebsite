@@ -4,45 +4,37 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useProfilesCache, filterProfiles, type ProFilter, type DateRange } from './useProfilesCache';
 
-type ChartData = {
+type ChartRow = {
     name: string;
     pro: number;
     free: number;
     total: number;
 };
 
-export default function TopikLevelChart({ filter, dateRange = 'all' }: { filter?: ProFilter; dateRange?: DateRange }) {
+// profiles.use_traditional: false = simplified (the default), true = traditional.
+// Very lopsided in practice (~99% simplified) but useful to track adoption.
+export default function TraditionalSimplifiedChart({ filter, dateRange = 'all' }: { filter?: ProFilter; dateRange?: DateRange }) {
     const { profiles, loading } = useProfilesCache();
 
-    const data: ChartData[] = useMemo(() => {
+    const data: ChartRow[] = useMemo(() => {
         const rows = filterProfiles(profiles, filter, dateRange);
-        const levelCounts: Record<string, { pro: number; free: number }> = {};
+        const counts: Record<string, { pro: number; free: number }> = {
+            Simplified: { pro: 0, free: 0 },
+            Traditional: { pro: 0, free: 0 },
+        };
 
-        for (const profile of rows) {
-            const level = profile.topik_level;
-            if (level !== null && level !== undefined) {
-                const key = `TOPIK ${level}`;
-                if (!levelCounts[key]) {
-                    levelCounts[key] = { pro: 0, free: 0 };
-                }
-
-                if (profile.is_pro) {
-                    levelCounts[key].pro++;
-                } else {
-                    levelCounts[key].free++;
-                }
-            }
+        for (const r of rows) {
+            const key = r.use_traditional ? 'Traditional' : 'Simplified';
+            if (r.is_pro) counts[key].pro += 1;
+            else counts[key].free += 1;
         }
 
-        // Convert to array and sort by name (TOPIK 1, TOPIK 2, etc.)
-        return Object.entries(levelCounts)
-            .map(([name, counts]) => ({
-                name,
-                pro: counts.pro,
-                free: counts.free,
-                total: counts.pro + counts.free
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+        return (['Simplified', 'Traditional'] as const).map(name => ({
+            name,
+            pro: counts[name].pro,
+            free: counts[name].free,
+            total: counts[name].pro + counts[name].free,
+        }));
     }, [profiles, filter, dateRange]);
 
     const poolTotal = useMemo(() => {
@@ -57,21 +49,18 @@ export default function TopikLevelChart({ filter, dateRange = 'all' }: { filter?
         </div>
     );
 
-    if (data.length === 0) return (
+    if (data.every(d => d.total === 0)) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">No TOPIK Level data available</p>
+            <p className="text-gray-500 font-medium">No Simplified/Traditional data available</p>
         </div>
     );
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
-            <h3 className="text-lg font-bold mb-6 text-gray-900">TOPIK Level</h3>
+            <h3 className="text-lg font-bold mb-6 text-gray-900">Simplified vs Traditional</h3>
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={data}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
+                    <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
                             dataKey="name"

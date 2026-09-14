@@ -4,45 +4,32 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useProfilesCache, filterProfiles, type ProFilter, type DateRange } from './useProfilesCache';
 
-type ChartData = {
+type ChartRow = {
     name: string;
     pro: number;
     free: number;
     total: number;
 };
 
-export default function TopikLevelChart({ filter, dateRange = 'all' }: { filter?: ProFilter; dateRange?: DateRange }) {
+// UI theme the user picked in-app: classic, dark, nature, ink, plus whatever
+// gets added later. Read from profiles.theme.
+export default function ThemeChart({ filter, dateRange = 'all' }: { filter?: ProFilter; dateRange?: DateRange }) {
     const { profiles, loading } = useProfilesCache();
 
-    const data: ChartData[] = useMemo(() => {
+    const data: ChartRow[] = useMemo(() => {
         const rows = filterProfiles(profiles, filter, dateRange);
-        const levelCounts: Record<string, { pro: number; free: number }> = {};
+        const counts: Record<string, { pro: number; free: number }> = {};
 
-        for (const profile of rows) {
-            const level = profile.topik_level;
-            if (level !== null && level !== undefined) {
-                const key = `TOPIK ${level}`;
-                if (!levelCounts[key]) {
-                    levelCounts[key] = { pro: 0, free: 0 };
-                }
-
-                if (profile.is_pro) {
-                    levelCounts[key].pro++;
-                } else {
-                    levelCounts[key].free++;
-                }
-            }
+        for (const r of rows) {
+            const key = r.theme ?? '(none)';
+            if (!counts[key]) counts[key] = { pro: 0, free: 0 };
+            if (r.is_pro) counts[key].pro += 1;
+            else counts[key].free += 1;
         }
 
-        // Convert to array and sort by name (TOPIK 1, TOPIK 2, etc.)
-        return Object.entries(levelCounts)
-            .map(([name, counts]) => ({
-                name,
-                pro: counts.pro,
-                free: counts.free,
-                total: counts.pro + counts.free
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+        return Object.entries(counts)
+            .map(([name, c]) => ({ name, pro: c.pro, free: c.free, total: c.pro + c.free }))
+            .sort((a, b) => b.total - a.total);
     }, [profiles, filter, dateRange]);
 
     const poolTotal = useMemo(() => {
@@ -59,19 +46,16 @@ export default function TopikLevelChart({ filter, dateRange = 'all' }: { filter?
 
     if (data.length === 0) return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">No TOPIK Level data available</p>
+            <p className="text-gray-500 font-medium">No Theme data available</p>
         </div>
     );
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
-            <h3 className="text-lg font-bold mb-6 text-gray-900">TOPIK Level</h3>
+            <h3 className="text-lg font-bold mb-6 text-gray-900">Theme</h3>
             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={data}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
+                    <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                         <XAxis
                             dataKey="name"
