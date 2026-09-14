@@ -4,6 +4,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CharacterEditModal, { Character } from "../components/CharacterEditModal";
 
+// Register-aware reports (app build 42+) append ' [formal|standard|informal]'
+// to the reported text, and the text itself may be a variant row's korean
+// (example_sentence_variants) rather than a base sentence.
+const REGISTER_RE = /^([\s\S]*) \[(formal|standard|informal)\]$/;
+const reportedText = (s: string) => {
+    const m = s.match(REGISTER_RE);
+    return m ? m[1] : s;
+};
+const reportedRegister = (s: string) => {
+    const m = s.match(REGISTER_RE);
+    return m ? m[2] : null;
+};
+
 type SentenceReport = {
     id: string;
     created_at: string;
@@ -84,20 +97,29 @@ export default function SentenceReportsPage() {
                     loadedReports
                         .map((r: SentenceReport) => r.sentence_korean)
                         .filter((s: string | null | undefined): s is string => !!s)
+                        .map(reportedText)
                 )
             );
 
             if (uniqueKorean.length > 0) {
-                const { data: sentenceData, error: sentenceError } = await supabase
-                    .from("example_sentences")
-                    .select("korean, romanization, audio_url")
-                    .in("korean", uniqueKorean);
-
-                if (sentenceError) throw sentenceError;
+                // The reported text may be a base sentence OR a register
+                // variant (example_sentence_variants) — check both stores.
+                const [baseRes, variantRes] = await Promise.all([
+                    supabase
+                        .from("example_sentences")
+                        .select("korean, romanization, audio_url")
+                        .in("korean", uniqueKorean),
+                    supabase
+                        .from("example_sentence_variants")
+                        .select("korean, romanization, audio_url")
+                        .in("korean", uniqueKorean),
+                ]);
+                if (baseRes.error) throw baseRes.error;
+                if (variantRes.error) throw variantRes.error;
 
                 const audioMap: Record<string, string | null> = {};
                 const romanMap: Record<string, string | null> = {};
-                for (const s of sentenceData || []) {
+                for (const s of [...(baseRes.data || []), ...(variantRes.data || [])]) {
                     if (s.korean) {
                         audioMap[s.korean] = s.audio_url ?? null;
                         romanMap[s.korean] = s.romanization ?? null;
@@ -389,9 +411,14 @@ export default function SentenceReportsPage() {
                                     <td className="px-6 py-4 text-sm text-gray-500 max-w-[400px]">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-semibold text-gray-800">{report.sentence_korean}</span>
+                                                <span className="font-semibold text-gray-800">{reportedText(report.sentence_korean)}</span>
+                                                {reportedRegister(report.sentence_korean) && (
+                                                    <span className="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500">
+                                                        {reportedRegister(report.sentence_korean)}
+                                                    </span>
+                                                )}
                                                 {(() => {
-                                                    const audioUrl = audioByKorean[report.sentence_korean];
+                                                    const audioUrl = audioByKorean[reportedText(report.sentence_korean)];
                                                     return (
                                                         <button
                                                             type="button"
@@ -413,8 +440,8 @@ export default function SentenceReportsPage() {
                                                     );
                                                 })()}
                                             </div>
-                                            {romanizationByKorean[report.sentence_korean] && (
-                                                <div className="italic text-gray-600">{romanizationByKorean[report.sentence_korean]}</div>
+                                            {romanizationByKorean[reportedText(report.sentence_korean)] && (
+                                                <div className="italic text-gray-600">{romanizationByKorean[reportedText(report.sentence_korean)]}</div>
                                             )}
                                             <div className="text-gray-500">{report.sentence_english}</div>
                                         </div>

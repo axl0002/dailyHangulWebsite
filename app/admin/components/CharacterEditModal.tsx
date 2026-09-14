@@ -9,6 +9,20 @@ export type ExampleSentence = {
     romanization: string;
     english: string;
     audio_url?: string | null;
+    formality?: string | null;
+};
+
+// Register variants live in a SIDE table (example_sentence_variants), never
+// as rows of example_sentences — old clients render every embedded row, so
+// merging them would leak 반말 to users who never opted in. The admin edits
+// both stores here.
+export type SentenceVariant = {
+    id: number;
+    sentence_id: number;
+    formality: string;
+    korean: string;
+    romanization: string | null;
+    audio_url?: string | null;
 };
 
 export type Character = {
@@ -32,31 +46,34 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
     const [editingCharacter, setEditingCharacter] = useState<Character>(character);
     const [sentences, setSentences] = useState<ExampleSentence[]>([]);
     const [originalSentences, setOriginalSentences] = useState<Map<number, ExampleSentence>>(new Map());
+    const [variants, setVariants] = useState<SentenceVariant[]>([]);
+    const [originalVariants, setOriginalVariants] = useState<Map<number, SentenceVariant>>(new Map());
     const [sentencesLoading, setSentencesLoading] = useState(true);
     const [categories, setCategories] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
-    const [playingSentenceId, setPlayingSentenceId] = useState<number | null>(null);
+    // 's<id>' for base sentences, 'v<id>' for variants (separate id spaces).
+    const [playingKey, setPlayingKey] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    const handlePlayAudio = (sentence: ExampleSentence) => {
-        if (!sentence.audio_url || sentence.id === undefined) return;
+    const handlePlayAudio = (key: string, audioUrl: string | null | undefined) => {
+        if (!audioUrl) return;
 
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current = null;
         }
 
-        if (playingSentenceId === sentence.id) {
-            setPlayingSentenceId(null);
+        if (playingKey === key) {
+            setPlayingKey(null);
             return;
         }
 
-        const audio = new Audio(sentence.audio_url);
+        const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        setPlayingSentenceId(sentence.id);
-        audio.addEventListener("ended", () => setPlayingSentenceId(null));
-        audio.addEventListener("error", () => setPlayingSentenceId(null));
-        audio.play().catch(() => setPlayingSentenceId(null));
+        setPlayingKey(key);
+        audio.addEventListener("ended", () => setPlayingKey(null));
+        audio.addEventListener("error", () => setPlayingKey(null));
+        audio.play().catch(() => setPlayingKey(null));
     };
 
     useEffect(() => {
@@ -94,21 +111,30 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
             try {
                 const { data, error } = await supabase
                     .from("example_sentences")
-                    .select("id, korean, romanization, english, audio_url")
+                    .select("id, korean, romanization, english, audio_url, formality, example_sentence_variants(id, sentence_id, formality, korean, romanization, audio_url)")
                     .eq("character_id", character.id)
                     .order("id");
 
                 if (error) throw error;
-                const loaded: ExampleSentence[] = (data || []).map(s => ({
-                    ...s,
-                    romanization: s.romanization ?? "",
-                }));
+                const loadedVariants: SentenceVariant[] = [];
+                const loaded: ExampleSentence[] = (data || []).map(s => {
+                    for (const v of (s.example_sentence_variants ?? []) as SentenceVariant[]) {
+                        loadedVariants.push({ ...v });
+                    }
+                    const { example_sentence_variants: _drop, ...base } = s;
+                    return { ...base, romanization: s.romanization ?? "" };
+                });
+                loadedVariants.sort((a, b) => a.id - b.id);
                 setSentences(loaded);
+                setVariants(loadedVariants);
                 const originals = new Map<number, ExampleSentence>();
                 for (const s of loaded) {
                     if (s.id !== undefined) originals.set(s.id, { ...s });
                 }
                 setOriginalSentences(originals);
+                const vOriginals = new Map<number, SentenceVariant>();
+                for (const v of loadedVariants) vOriginals.set(v.id, { ...v });
+                setOriginalVariants(vOriginals);
             } catch (err) {
                 console.error("Error fetching example sentences:", err);
             } finally {
@@ -125,6 +151,10 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
             next[index] = { ...next[index], [field]: value };
             return next;
         });
+    };
+
+    const handleVariantChange = (id: number, field: "korean" | "romanization", value: string) => {
+        setVariants(prev => prev.map(v => (v.id === id ? { ...v, [field]: value } : v)));
     };
 
     const handleAddSentence = () => {
@@ -215,6 +245,29 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                 if (updError) throw updError;
                 if (!updData || updData.length === 0) {
                     throw new Error(`Sentence update for id ${s.id} affected 0 rows — likely blocked by RLS policy on example_sentences.`);
+                }
+            }
+
+            // Register variants (side table). Deleting a base sentence above
+            // cascades its variants (FK ON DELETE CASCADE), so only edits to
+            // surviving variants need writing.
+            const deletedBaseIds = new Set(toDelete);
+            for (const v of variants) {
+                if (deletedBaseIds.has(v.sentence_id)) continue;
+                const original = originalVariants.get(v.id);
+                if (original
+                    && original.korean === v.korean
+                    && (original.romanization ?? "") === (v.romanization ?? "")
+                ) continue;
+
+                const { data: vData, error: vError } = await supabase
+                    .from("example_sentence_variants")
+                    .update({ korean: v.korean, romanization: v.romanization })
+                    .eq("id", v.id)
+                    .select();
+                if (vError) throw vError;
+                if (!vData || vData.length === 0) {
+                    throw new Error(`Variant update for id ${v.id} affected 0 rows — likely blocked by RLS policy on example_sentence_variants.`);
                 }
             }
 
@@ -360,7 +413,14 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
                                         <div className="space-y-3">
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Korean</label>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">
+                                                    Korean
+                                                    {sentence.formality && (
+                                                        <span className="ml-2 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500">
+                                                            {sentence.formality}
+                                                        </span>
+                                                    )}
+                                                </label>
                                                 <div className="flex gap-2">
                                                     <input
                                                         type="text"
@@ -371,12 +431,12 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => handlePlayAudio(sentence)}
+                                                        onClick={() => handlePlayAudio(`s${sentence.id}`, sentence.audio_url)}
                                                         disabled={!sentence.audio_url}
                                                         title={sentence.audio_url ? "Play audio" : "No audio available"}
                                                         className="shrink-0 px-2 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                                                     >
-                                                        {playingSentenceId === sentence.id ? (
+                                                        {playingKey === `s${sentence.id}` ? (
                                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
                                                                 <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
                                                             </svg>
@@ -408,6 +468,54 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                     placeholder="Meaning..."
                                                 />
                                             </div>
+                                            {sentence.id !== undefined &&
+                                                variants.some(v => v.sentence_id === sentence.id) && (
+                                                <div className="pt-2 border-t border-dashed space-y-2">
+                                                    <div className="text-xs font-semibold text-gray-400">Register variants</div>
+                                                    {variants
+                                                        .filter(v => v.sentence_id === sentence.id)
+                                                        .map(v => (
+                                                            <div key={v.id} className="flex items-start gap-2">
+                                                                <span className="shrink-0 mt-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500 w-[70px] text-center">
+                                                                    {v.formality}
+                                                                </span>
+                                                                <div className="flex-1 space-y-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={v.korean}
+                                                                        onChange={(e) => handleVariantChange(v.id, "korean", e.target.value)}
+                                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
+                                                                        placeholder="한국어..."
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={v.romanization ?? ""}
+                                                                        onChange={(e) => handleVariantChange(v.id, "romanization", e.target.value)}
+                                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1 text-xs border text-gray-500 focus:ring-black focus:border-black"
+                                                                        placeholder="Romanization..."
+                                                                    />
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handlePlayAudio(`v${v.id}`, v.audio_url)}
+                                                                    disabled={!v.audio_url}
+                                                                    title={v.audio_url ? "Play audio" : "No audio available"}
+                                                                    className="shrink-0 mt-1 px-2 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                                >
+                                                                    {playingKey === `v${v.id}` ? (
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
+                                                                            <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
+                                                                        </svg>
+                                                                    ) : (
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
+                                                                            <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
+                                                                        </svg>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))
