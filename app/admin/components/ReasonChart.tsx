@@ -75,11 +75,22 @@ export default function ReasonChart({ filter }: { filter?: 'all' | 'true' | 'fal
                 const responses = profile.survey_responses;
                 // Check if we have valid survey responses
                 if (responses && typeof responses === 'object' && !Array.isArray(responses)) {
-                    // Extract reason
+                    // Motivation went multi-select in-app on 2026-09-14: new
+                    // rows carry the full list in 'reasons' while 'reason'
+                    // duplicates its first entry (kept for query compat), so
+                    // prefer the list and never read both. Old rows only have
+                    // the single 'reason'. A multi-select profile counts once
+                    // per selected motivation, so bar totals can exceed the
+                    // profile count.
+                    const rawReasons = responses['reasons'];
                     const reason = responses['reason'];
+                    const selected: string[] = Array.isArray(rawReasons)
+                        ? rawReasons.filter((r): r is string => typeof r === 'string')
+                        : (reason && typeof reason === 'string' ? [reason] : []);
 
-                    if (reason && typeof reason === 'string') {
-                        const key = reason.trim();
+                    for (const r of selected) {
+                        const key = r.trim();
+                        if (!key) continue;
                         if (!reasonCounts[key]) {
                             reasonCounts[key] = { pro: 0, free: 0 };
                         }
