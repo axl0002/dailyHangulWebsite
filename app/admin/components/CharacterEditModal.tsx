@@ -511,33 +511,31 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                     {variants
                                                         .filter(v => v.sentence_id === sentence.id)
                                                         .map(v => (
-                                                            <div key={vkey(v)} className="flex items-start gap-2">
-                                                                <span className="shrink-0 mt-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500 w-[70px] text-center">
-                                                                    {v.formality}
-                                                                </span>
-                                                                <div className="flex-1 space-y-1">
-                                                                    <input
-                                                                        type="text"
-                                                                        value={v.korean}
-                                                                        onChange={(e) => handleVariantChange(vkey(v), "korean", e.target.value)}
-                                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
-                                                                        placeholder="한국어..."
-                                                                    />
-                                                                    <input
-                                                                        type="text"
-                                                                        value={v.romanization ?? ""}
-                                                                        onChange={(e) => handleVariantChange(vkey(v), "romanization", e.target.value)}
-                                                                        className="block w-full border-gray-300 rounded-md shadow-sm p-1 text-xs border text-gray-500 focus:ring-black focus:border-black"
-                                                                        placeholder="Romanization..."
-                                                                    />
-                                                                </div>
-                                                                <div className="mt-1">
+                                                            <div key={vkey(v)} className="space-y-1">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500">
+                                                                        {v.formality}
+                                                                    </span>
                                                                     {renderSpeedButtons(`v${vkey(v)}`, {
                                                                         slow: v.audio_url_slow,
                                                                         normal: v.audio_url_normal,
                                                                         fast: v.audio_url,
                                                                     })}
                                                                 </div>
+                                                                <input
+                                                                    type="text"
+                                                                    value={v.korean}
+                                                                    onChange={(e) => handleVariantChange(vkey(v), "korean", e.target.value)}
+                                                                    className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
+                                                                    placeholder="한국어..."
+                                                                />
+                                                                <input
+                                                                    type="text"
+                                                                    value={v.romanization ?? ""}
+                                                                    onChange={(e) => handleVariantChange(vkey(v), "romanization", e.target.value)}
+                                                                    className="block w-full border-gray-300 rounded-md shadow-sm p-1 text-xs border text-gray-500 focus:ring-black focus:border-black"
+                                                                    placeholder="Romanization..."
+                                                                />
                                                             </div>
                                                         ))}
                                                 </div>
