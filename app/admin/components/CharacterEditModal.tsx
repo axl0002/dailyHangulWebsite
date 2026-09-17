@@ -15,7 +15,8 @@ export type ExampleSentence = {
 // Register variants live in a SIDE table (example_sentence_variants), never
 // as rows of example_sentences — old clients render every embedded row, so
 // merging them would leak 반말 to users who never opted in. The admin edits
-// both stores here. Composite PK (sentence_id, formality) — no surrogate id.
+// both stores here.
+// NOTE: the table has NO id column — primary key is (sentence_id, formality).
 export type SentenceVariant = {
     sentence_id: number;
     formality: string;
@@ -24,8 +25,8 @@ export type SentenceVariant = {
     audio_url?: string | null;
 };
 
-const variantKey = (v: Pick<SentenceVariant, "sentence_id" | "formality">) =>
-    `${v.sentence_id}:${v.formality}`;
+const vkey = (v: Pick<SentenceVariant, "sentence_id" | "formality">) =>
+    `${v.sentence_id}|${v.formality}`;
 
 export type Character = {
     id: string;
@@ -126,9 +127,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                     const { example_sentence_variants: _drop, ...base } = s;
                     return { ...base, romanization: s.romanization ?? "" };
                 });
-                loadedVariants.sort((a, b) =>
-                    a.sentence_id - b.sentence_id || a.formality.localeCompare(b.formality)
-                );
+                loadedVariants.sort((a, b) => vkey(a).localeCompare(vkey(b)));
                 setSentences(loaded);
                 setVariants(loadedVariants);
                 const originals = new Map<number, ExampleSentence>();
@@ -137,7 +136,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                 }
                 setOriginalSentences(originals);
                 const vOriginals = new Map<string, SentenceVariant>();
-                for (const v of loadedVariants) vOriginals.set(variantKey(v), { ...v });
+                for (const v of loadedVariants) vOriginals.set(vkey(v), { ...v });
                 setOriginalVariants(vOriginals);
             } catch (err) {
                 console.error("Error fetching example sentences:", err);
@@ -158,7 +157,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
     };
 
     const handleVariantChange = (key: string, field: "korean" | "romanization", value: string) => {
-        setVariants(prev => prev.map(v => (variantKey(v) === key ? { ...v, [field]: value } : v)));
+        setVariants(prev => prev.map(v => (vkey(v) === key ? { ...v, [field]: value } : v)));
     };
 
     const handleAddSentence = () => {
@@ -254,12 +253,11 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
 
             // Register variants (side table). Deleting a base sentence above
             // cascades its variants (FK ON DELETE CASCADE), so only edits to
-            // surviving variants need writing. Composite PK (sentence_id,
-            // formality) — target both columns on update.
+            // surviving variants need writing.
             const deletedBaseIds = new Set(toDelete);
             for (const v of variants) {
                 if (deletedBaseIds.has(v.sentence_id)) continue;
-                const original = originalVariants.get(variantKey(v));
+                const original = originalVariants.get(vkey(v));
                 if (original
                     && original.korean === v.korean
                     && (original.romanization ?? "") === (v.romanization ?? "")
@@ -273,7 +271,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                     .select();
                 if (vError) throw vError;
                 if (!vData || vData.length === 0) {
-                    throw new Error(`Variant update for ${variantKey(v)} affected 0 rows — likely blocked by RLS policy on example_sentence_variants.`);
+                    throw new Error(`Variant update for ${vkey(v)} affected 0 rows — likely blocked by RLS policy on example_sentence_variants.`);
                 }
             }
 
@@ -480,10 +478,8 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                     <div className="text-xs font-semibold text-gray-400">Register variants</div>
                                                     {variants
                                                         .filter(v => v.sentence_id === sentence.id)
-                                                        .map(v => {
-                                                            const vk = variantKey(v);
-                                                            return (
-                                                            <div key={vk} className="flex items-start gap-2">
+                                                        .map(v => (
+                                                            <div key={vkey(v)} className="flex items-start gap-2">
                                                                 <span className="shrink-0 mt-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gray-100 border text-gray-500 w-[70px] text-center">
                                                                     {v.formality}
                                                                 </span>
@@ -491,26 +487,26 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                                     <input
                                                                         type="text"
                                                                         value={v.korean}
-                                                                        onChange={(e) => handleVariantChange(vk, "korean", e.target.value)}
+                                                                        onChange={(e) => handleVariantChange(vkey(v), "korean", e.target.value)}
                                                                         className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
                                                                         placeholder="한국어..."
                                                                     />
                                                                     <input
                                                                         type="text"
                                                                         value={v.romanization ?? ""}
-                                                                        onChange={(e) => handleVariantChange(vk, "romanization", e.target.value)}
+                                                                        onChange={(e) => handleVariantChange(vkey(v), "romanization", e.target.value)}
                                                                         className="block w-full border-gray-300 rounded-md shadow-sm p-1 text-xs border text-gray-500 focus:ring-black focus:border-black"
                                                                         placeholder="Romanization..."
                                                                     />
                                                                 </div>
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => handlePlayAudio(`v${vk}`, v.audio_url)}
+                                                                    onClick={() => handlePlayAudio(`v${vkey(v)}`, v.audio_url)}
                                                                     disabled={!v.audio_url}
                                                                     title={v.audio_url ? "Play audio" : "No audio available"}
                                                                     className="shrink-0 mt-1 px-2 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
                                                                 >
-                                                                    {playingKey === `v${vk}` ? (
+                                                                    {playingKey === `v${vkey(v)}` ? (
                                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
                                                                             <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
                                                                         </svg>
@@ -521,8 +517,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                                     )}
                                                                 </button>
                                                             </div>
-                                                            );
-                                                        })}
+                                                        ))}
                                                 </div>
                                             )}
                                         </div>
