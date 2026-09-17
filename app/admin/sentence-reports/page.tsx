@@ -66,10 +66,11 @@ export default function SentenceReportsPage() {
     const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
     const [showModal, setShowModal] = useState(false);
 
-    // Audio playback
-    const [audioByKorean, setAudioByKorean] = useState<Record<string, string | null>>({});
+    // Audio playback — one URL per (korean, speed).
+    type SpeedUrls = { slow: string | null; normal: string | null; fast: string | null };
+    const [audioByKorean, setAudioByKorean] = useState<Record<string, SpeedUrls>>({});
     const [romanizationByKorean, setRomanizationByKorean] = useState<Record<string, string | null>>({});
-    const [playingReportId, setPlayingReportId] = useState<string | null>(null);
+    const [playingKey, setPlayingKey] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const fetchReports = useCallback(async () => {
@@ -107,21 +108,25 @@ export default function SentenceReportsPage() {
                 const [baseRes, variantRes] = await Promise.all([
                     supabase
                         .from("example_sentences")
-                        .select("korean, romanization, audio_url")
+                        .select("korean, romanization, audio_url, audio_url_normal, audio_url_slow")
                         .in("korean", uniqueKorean),
                     supabase
                         .from("example_sentence_variants")
-                        .select("korean, romanization, audio_url")
+                        .select("korean, romanization, audio_url, audio_url_normal, audio_url_slow")
                         .in("korean", uniqueKorean),
                 ]);
                 if (baseRes.error) throw baseRes.error;
                 if (variantRes.error) throw variantRes.error;
 
-                const audioMap: Record<string, string | null> = {};
+                const audioMap: Record<string, SpeedUrls> = {};
                 const romanMap: Record<string, string | null> = {};
                 for (const s of [...(baseRes.data || []), ...(variantRes.data || [])]) {
                     if (s.korean) {
-                        audioMap[s.korean] = s.audio_url ?? null;
+                        audioMap[s.korean] = {
+                            slow: s.audio_url_slow ?? null,
+                            normal: s.audio_url_normal ?? null,
+                            fast: s.audio_url ?? null,
+                        };
                         romanMap[s.korean] = s.romanization ?? null;
                     }
                 }
@@ -170,7 +175,7 @@ export default function SentenceReportsPage() {
         }
     }, [sortField, sortOrder]);
 
-    const handlePlayAudio = (reportId: string, audioUrl: string | null | undefined) => {
+    const handlePlayAudio = (key: string, audioUrl: string | null | undefined) => {
         if (!audioUrl) return;
 
         if (audioRef.current) {
@@ -178,18 +183,24 @@ export default function SentenceReportsPage() {
             audioRef.current = null;
         }
 
-        if (playingReportId === reportId) {
-            setPlayingReportId(null);
+        if (playingKey === key) {
+            setPlayingKey(null);
             return;
         }
 
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        setPlayingReportId(reportId);
-        audio.addEventListener("ended", () => setPlayingReportId(null));
-        audio.addEventListener("error", () => setPlayingReportId(null));
-        audio.play().catch(() => setPlayingReportId(null));
+        setPlayingKey(key);
+        audio.addEventListener("ended", () => setPlayingKey(null));
+        audio.addEventListener("error", () => setPlayingKey(null));
+        audio.play().catch(() => setPlayingKey(null));
     };
+
+    const SPEEDS = [
+        { id: "slow" as const, label: "S", title: "Slow" },
+        { id: "normal" as const, label: "N", title: "Normal" },
+        { id: "fast" as const, label: "F", title: "Fast" },
+    ];
 
     useEffect(() => {
         return () => {
@@ -418,25 +429,36 @@ export default function SentenceReportsPage() {
                                                     </span>
                                                 )}
                                                 {(() => {
-                                                    const audioUrl = audioByKorean[reportedText(report.sentence_korean)];
+                                                    const urls = audioByKorean[reportedText(report.sentence_korean)];
                                                     return (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handlePlayAudio(report.id, audioUrl)}
-                                                            disabled={!audioUrl}
-                                                            title={audioUrl ? "Play audio" : "No audio available"}
-                                                            className="shrink-0 px-1.5 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
-                                                        >
-                                                            {playingReportId === report.id ? (
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-gray-700">
-                                                                    <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
-                                                                </svg>
-                                                            ) : (
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-gray-700">
-                                                                    <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
-                                                                </svg>
-                                                            )}
-                                                        </button>
+                                                        <div className="flex gap-1 shrink-0">
+                                                            {SPEEDS.map(({ id, label, title }) => {
+                                                                const url = urls?.[id] ?? null;
+                                                                const key = `${report.id}:${id}`;
+                                                                const active = playingKey === key;
+                                                                return (
+                                                                    <button
+                                                                        key={key}
+                                                                        type="button"
+                                                                        onClick={() => handlePlayAudio(key, url)}
+                                                                        disabled={!url}
+                                                                        title={url ? `Play ${title.toLowerCase()}` : `No ${title.toLowerCase()} audio`}
+                                                                        className="shrink-0 px-1.5 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5"
+                                                                    >
+                                                                        {active ? (
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-gray-700">
+                                                                                <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
+                                                                            </svg>
+                                                                        ) : (
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-gray-700">
+                                                                                <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
+                                                                            </svg>
+                                                                        )}
+                                                                        <span className="text-[9px] font-bold text-gray-600 leading-none">{label}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     );
                                                 })()}
                                             </div>

@@ -9,6 +9,8 @@ export type ExampleSentence = {
     romanization: string;
     english: string;
     audio_url?: string | null;
+    audio_url_normal?: string | null;
+    audio_url_slow?: string | null;
     formality?: string | null;
 };
 
@@ -23,6 +25,8 @@ export type SentenceVariant = {
     korean: string;
     romanization: string | null;
     audio_url?: string | null;
+    audio_url_normal?: string | null;
+    audio_url_slow?: string | null;
 };
 
 const vkey = (v: Pick<SentenceVariant, "sentence_id" | "formality">) =>
@@ -114,7 +118,7 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
             try {
                 const { data, error } = await supabase
                     .from("example_sentences")
-                    .select("id, korean, romanization, english, audio_url, formality, example_sentence_variants(sentence_id, formality, korean, romanization, audio_url)")
+                    .select("id, korean, romanization, english, audio_url, audio_url_normal, audio_url_slow, formality, example_sentence_variants(sentence_id, formality, korean, romanization, audio_url, audio_url_normal, audio_url_slow)")
                     .eq("character_id", character.id)
                     .order("id");
 
@@ -167,6 +171,46 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
     const handleRemoveSentence = (index: number) => {
         setSentences(prev => prev.filter((_, i) => i !== index));
     };
+
+    // audio_url is the shipped/fast take; _normal and _slow are the alt renders.
+    const SPEEDS = [
+        { id: "slow" as const, label: "S", title: "Slow" },
+        { id: "normal" as const, label: "N", title: "Normal" },
+        { id: "fast" as const, label: "F", title: "Fast" },
+    ];
+    const renderSpeedButtons = (
+        keyPrefix: string,
+        urls: { slow?: string | null; normal?: string | null; fast?: string | null }
+    ) => (
+        <div className="flex gap-1 shrink-0">
+            {SPEEDS.map(({ id, label, title }) => {
+                const url = urls[id];
+                const key = `${keyPrefix}:${id}`;
+                const active = playingKey === key;
+                return (
+                    <button
+                        key={key}
+                        type="button"
+                        onClick={() => handlePlayAudio(key, url)}
+                        disabled={!url}
+                        title={url ? `Play ${title.toLowerCase()}` : `No ${title.toLowerCase()} audio`}
+                        className="shrink-0 px-1.5 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5"
+                    >
+                        {active ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-gray-700">
+                                <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-gray-700">
+                                <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
+                            </svg>
+                        )}
+                        <span className="text-[10px] font-bold text-gray-600 leading-none">{label}</span>
+                    </button>
+                );
+            })}
+        </div>
+    );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -433,23 +477,11 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                         className="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-sm border focus:ring-black focus:border-black"
                                                         placeholder="한국어..."
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handlePlayAudio(`s${sentence.id}`, sentence.audio_url)}
-                                                        disabled={!sentence.audio_url}
-                                                        title={sentence.audio_url ? "Play audio" : "No audio available"}
-                                                        className="shrink-0 px-2 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
-                                                    >
-                                                        {playingKey === `s${sentence.id}` ? (
-                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
-                                                                <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
-                                                            </svg>
-                                                        ) : (
-                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
-                                                                <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
-                                                            </svg>
-                                                        )}
-                                                    </button>
+                                                    {renderSpeedButtons(`s${sentence.id}`, {
+                                                        slow: sentence.audio_url_slow,
+                                                        normal: sentence.audio_url_normal,
+                                                        fast: sentence.audio_url,
+                                                    })}
                                                 </div>
                                             </div>
                                             <div>
@@ -499,23 +531,13 @@ export default function CharacterEditModal({ character, onClose, onSave }: Chara
                                                                         placeholder="Romanization..."
                                                                     />
                                                                 </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handlePlayAudio(`v${vkey(v)}`, v.audio_url)}
-                                                                    disabled={!v.audio_url}
-                                                                    title={v.audio_url ? "Play audio" : "No audio available"}
-                                                                    className="shrink-0 mt-1 px-2 py-1 rounded-md border bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                                                                >
-                                                                    {playingKey === `v${vkey(v)}` ? (
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
-                                                                            <path d="M5.5 3.5A1.5 1.5 0 017 5v10a1.5 1.5 0 01-3 0V5a1.5 1.5 0 011.5-1.5zM13 3.5A1.5 1.5 0 0114.5 5v10a1.5 1.5 0 01-3 0V5A1.5 1.5 0 0113 3.5z" />
-                                                                        </svg>
-                                                                    ) : (
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-700">
-                                                                            <path d="M6.3 2.84A1 1 0 004.8 3.7v12.6a1 1 0 001.5.86l11-6.3a1 1 0 000-1.72l-11-6.3z" />
-                                                                        </svg>
-                                                                    )}
-                                                                </button>
+                                                                <div className="mt-1">
+                                                                    {renderSpeedButtons(`v${vkey(v)}`, {
+                                                                        slow: v.audio_url_slow,
+                                                                        normal: v.audio_url_normal,
+                                                                        fast: v.audio_url,
+                                                                    })}
+                                                                </div>
                                                             </div>
                                                         ))}
                                                 </div>
