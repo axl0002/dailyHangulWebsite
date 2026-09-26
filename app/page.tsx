@@ -145,7 +145,7 @@ export default function Home() {
         </div>
 
         {/* Reviews Section */}
-        {/* <div className="w-full max-w-5xl mx-auto pt-40 pb-8">
+        <div className="w-full max-w-5xl mx-auto pt-40 pb-8">
           <div className="text-center space-y-3 mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
               Trusted by Learners Worldwide
@@ -187,7 +187,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div> */}
+        </div>
 
         {/* Features Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-40 pb-8 w-full max-w-5xl mx-auto">
