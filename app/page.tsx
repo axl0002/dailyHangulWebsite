@@ -1,6 +1,31 @@
 import Image from "next/image";
 
-export default function Home() {
+type Testimonial = { quote: string; author: string; rating: number };
+
+// Server-side fetch on the landing page — reviews land in the initial HTML
+// so crawlers see them, no client-side loading state. Revalidated hourly so
+// new testimonials in the admin table show up without a redeploy.
+async function getTestimonials(): Promise<Testimonial[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/testimonials?active=eq.true&order=display_order.asc&select=quote,author,rating`,
+      {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        next: { revalidate: 3600 },
+      },
+    );
+    if (!res.ok) return [];
+    return (await res.json()) as Testimonial[];
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const testimonials = await getTestimonials();
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col bg-background selection:bg-primary/20">
       {/* Background Elements */}
@@ -144,7 +169,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Reviews Section */}
+        {/* Reviews Section — hidden if the testimonials fetch returns empty */}
+        {testimonials.length > 0 && (
         <div className="w-full max-w-5xl mx-auto pt-40 pb-8">
           <div className="text-center space-y-3 mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
@@ -155,39 +181,27 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              {
-                name: "A Wang",
-                message: "If you want to speak Korean conversationally in modern world 2026 and be able to travel around Korea recognizing everyday words, Daily Hangul is the app to learn Korean.",
-              },
-              {
-                name: "Syd",
-                message: "I am enjoying the app so far! It is a great reminder to actually take time, even a minute or two, to review or learn a new word.",
-              },
-              {
-                name: "Ling San",
-                message: "The great thing of the APP is that it shows the Korean characters in the lock screen of your phone to help you remember them. Overall it is a great APP for learning Korean.",
-              },
-            ].map((review) => (
+            {testimonials.map((review, idx) => (
               <div
-                key={review.name}
+                key={`${review.author}-${idx}`}
                 className="flex flex-col p-6 rounded-2xl bg-accent/50 border border-primary/10 shadow-sm space-y-4"
               >
                 <div className="flex gap-0.5 text-primary">
-                  {Array.from({ length: 5 }).map((_, i) => (
+                  {Array.from({ length: Math.max(0, Math.min(5, review.rating ?? 5)) }).map((_, i) => (
                     <svg key={i} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
                   ))}
                 </div>
                 <p className="text-sm text-foreground/70 leading-relaxed flex-grow">
-                  &ldquo;{review.message}&rdquo;
+                  &ldquo;{review.quote}&rdquo;
                 </p>
-                <p className="text-sm font-semibold text-foreground">{review.name}</p>
+                <p className="text-sm font-semibold text-foreground">{review.author}</p>
               </div>
             ))}
           </div>
         </div>
+        )}
 
         {/* Features Section */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-40 pb-8 w-full max-w-5xl mx-auto">
