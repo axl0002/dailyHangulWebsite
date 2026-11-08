@@ -2,6 +2,7 @@
 
 import TopikLevelChart from './TopikLevelChart';
 import ReasonChart from './ReasonChart';
+import AgeChart from './AgeChart';
 import ReferralChart from './ReferralChart';
 import CategoryChart from './CategoryChart';
 import ReadingHoursChart from './ReadingHoursChart';
@@ -55,6 +56,7 @@ export default function AnalyticsGrid({ filter, dateRange }: { filter: ProFilter
             <TopikLevelChart filter={filter} dateRange={dateRange} />
             <ThemeChart filter={filter} dateRange={dateRange} />
             <ReadingHoursChart filter={filter} dateRange={dateRange} />
+            <AgeChart filter={filter} dateRange={dateRange} />
             <ReasonChart filter={filter} dateRange={dateRange} />
             <ReferralChart filter={filter} dateRange={dateRange} />
             <ContinentChart filter={filter} dateRange={dateRange} />

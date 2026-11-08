@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
     const [dateRange, setDateRange] = useState<DateRange>('30d');
 
     return (
-        <ProfilesCacheProvider>
+        <ProfilesCacheProvider dateRange={dateRange}>
         <div className="p-6">
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
                         </button>
                     </div>
                     <p className="text-xs text-gray-400 text-right max-w-xs">
-                        Time range applies to charts that support it. Existing distribution charts show all-time.
+                        Time range scopes the user cohort by join date — &ldquo;Last 7d&rdquo; shows users who signed up in the last 7 days.
                     </p>
                 </div>
             </div>

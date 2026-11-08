@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useProfilesCache, filterProfiles, type ProFilter, type DateRange } from './useProfilesCache';
+import { useProfilesCache, type ProFilter } from './useProfilesCache';
+import { ChartLoading, ChartError, ChartEmpty, ChartProOnlyPlaceholder } from './ChartMessage';
 
 type ChartRow = { name: string; pro: number };
 
@@ -12,6 +13,10 @@ type ChartRow = { name: string; pro: number };
 // ["standard"] default — so we chart Pro users only, like the other
 // post-paywall settings. Percentages use the Pro pool as denominator, not the
 // sum of bars, since bars overlap.
+//
+// Server has already unnested sentence_formalities per user, so each row is
+// {key: 'formal'|'standard'|'informal', n}. We reduce into fixed buckets so
+// the axis is stable even if a bucket has zero picks.
 const BUCKETS = ['formal', 'standard', 'informal'] as const;
 const LABELS: Record<typeof BUCKETS[number], string> = {
     formal: 'Formal',
@@ -19,41 +24,25 @@ const LABELS: Record<typeof BUCKETS[number], string> = {
     informal: 'Informal',
 };
 
-export default function FormalityChart({ filter, dateRange = 'all' }: { filter?: ProFilter; dateRange?: DateRange }) {
-    const { profiles, loading } = useProfilesCache();
+export default function FormalityChart({ filter = 'all' }: { filter?: ProFilter; dateRange?: unknown }) {
+    const { distributions, loading, error, retry } = useProfilesCache();
 
-    const { data, proTotal } = useMemo(() => {
-        const rows = filterProfiles(profiles, 'true', dateRange); // force Pro
+    const data: ChartRow[] = useMemo(() => {
         const counts: Record<string, number> = { formal: 0, standard: 0, informal: 0 };
-        for (const r of rows) {
-            const picks = r.sentence_formalities;
-            if (!Array.isArray(picks)) continue;
-            for (const p of picks) if (counts[p] !== undefined) counts[p] += 1;
+        for (const r of distributions?.formality ?? []) {
+            if (r.key && counts[r.key] !== undefined) counts[r.key] += r.n;
         }
-        return {
-            data: BUCKETS.map(key => ({ name: LABELS[key], pro: counts[key] })) as ChartRow[],
-            proTotal: rows.length,
-        };
-    }, [profiles, dateRange]);
+        return BUCKETS.map(key => ({ name: LABELS[key], pro: counts[key] }));
+    }, [distributions]);
 
-    if (loading) return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-center h-[300px]">
-            <span className="text-gray-400">Loading chart data...</span>
-        </div>
-    );
+    // Bars overlap (a user can pick more than one), so % uses the Pro pool
+    // as denominator, not the sum of bars.
+    const proTotal = distributions?.pool.pro ?? 0;
 
-    if (filter === 'false') return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">Formality</p>
-            <p className="text-xs text-gray-400 mt-1">Pro feature — no data to show for Free users.</p>
-        </div>
-    );
-
-    if (data.every(d => d.pro === 0)) return (
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[300px]">
-            <p className="text-gray-500 font-medium">No Formality data available</p>
-        </div>
-    );
+    if (loading) return <ChartLoading />;
+    if (error) return <ChartError title="Formality" error={error} onRetry={retry} />;
+    if (filter === 'false') return <ChartProOnlyPlaceholder title="Formality" />;
+    if (data.every(d => d.pro === 0)) return <ChartEmpty title="No Formality data available" />;
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2 lg:col-span-1">
